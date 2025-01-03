@@ -1,0 +1,94 @@
+name: 'Run Workflow'
+description: 'Sends a workfow-dispatch event to a github workflow.'
+inputs:
+  repo:
+    description: 'format: {owner}/{name}'
+    required: true
+  workflow:
+    description: 'workflow yml filename'
+    required: true
+  ref:
+    description: 'the ref to invoke the workflow at'
+    required: true
+  goal:
+    description: 'A goal to wait for before exiting. Options are start, complete, and success. The drfault is start.'
+    required: false
+    defailt: 'start'
+  access_token:
+    description: 'GitHub access token to use to access repo'
+    required: true
+  field1:
+    description: 'a field to send to the workflow in the form name=value'
+    required: false
+  field2:
+    description: 'a field to send to the workflow in the form name=value'
+    required: false
+  field3:
+    description: 'a field to send to the workflow in the form name=value'
+    required: false
+  field4:
+    description: 'a field to send to the workflow in the form name=value'
+    required: false
+  field5:
+    description: 'a field to send to the workflow in the form name=value'
+    required: false
+  field16:
+    description: 'a field to send to the workflow in the form name=value'
+    required: false
+  field7:
+    description: 'a field to send to the workflow in the form name=value'
+    required: false
+  field8:
+    description: 'a field to send to the workflow in the form name=value'
+    required: false
+  field9:
+    description: 'a field to send to the workflow in the form name=value'
+    required: false
+  field10:
+    description: 'a field to send to the workflow in the form name=value'
+    required: false
+outputs:
+  random-number:
+    description: "Random number"
+    value: ${{ steps.random-number-generator.outputs.random-number }}
+runs:
+  using: "composite"
+  steps:
+    - name: Set Values
+      id: set_values
+      run: |
+        echo name: "${{ inputs.repo }}"
+        echo workflow: "${{ inputs.workflow }}"
+        echo ref: "${{ inputs.ref }}"
+        echo goal: "${{ inputs.goal }}"
+        echo ""
+        fields="${{ inputs.field1 && format('-f {0} ', inputs.field1) || '' }}"
+        fields+="${{ inputs.field2 && format('-f {0} ', inputs.field2) || '' }}"
+        fields+="${{ inputs.field3 && format('-f {0} ', inputs.field3) || '' }}"
+        fields+="${{ inputs.field4 && format('-f {0} ', inputs.field4) || '' }}"
+        fields+="${{ inputs.field5 && format('-f {0} ', inputs.field5) || '' }}"
+        fields+="${{ inputs.field6 && format('-f {0} ', inputs.field6) || '' }}"
+        fields+="${{ inputs.field7 && format('-f {0} ', inputs.field7) || '' }}"
+        fields+="${{ inputs.field8 && format('-f {0} ', inputs.field8) || '' }}"
+        fields+="${{ inputs.field9 && format('-f {0} ', inputs.field9) || '' }}"
+        fields+="${{ inputs.field10 && format('-f {0} ', inputs.field10) || '' }}"
+        echo "fields=${fields}"
+        echo "fields=${fields}" >> "$GITHUB_OUTPUT"
+        echo ""
+        # timestamp just before the workflow is started
+        echo "startTime=$(date -u +%FT%TZ)"
+        echo "startTime=$(date -u +%FT%TZ)" >> "$GITHUB_OUTPUT"
+    - name: Run Smoketests
+      run: |
+        echo gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
+        gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
+        if [[ "$?" != 0 ]]; then
+          printf "${RED}%s\n${NC}" "*** ERROR: Failed to run workflow"
+          exit 1
+        fi
+    # - name: Await Smoketests
+    #   working-directory: .github/scripts
+    #   continue-on-error: true
+    #   run: |
+    #     echo ./devops_await_workflow.sh -b "main" -o "${{ env.repo_owner }}" -p ${access_token} -r "${{ matrix.repo.name }}" -w "${{ matrix.workflow }}" -t ${{ steps.set_values.outputs.startTime }} -g "success"
+    #     ./devops_await_workflow.sh -b "main" -o "${{ env.repo_owner }}" -p ${access_token} -r "${{ matrix.repo.name }}" -w "${{ matrix.workflow }}" -t ${{ steps.set_values.outputs.startTime }} -g "success"
