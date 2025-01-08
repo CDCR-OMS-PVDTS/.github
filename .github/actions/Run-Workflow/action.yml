@@ -55,6 +55,7 @@ runs:
   using: "composite"
   steps:
     - name: Set Values
+      shell: bash
       id: set_values
       run: |
         echo name: "${{ inputs.repo }}"
@@ -79,6 +80,7 @@ runs:
         echo "startTime=$(date -u +%FT%TZ)"
         echo "startTime=$(date -u +%FT%TZ)" >> "$GITHUB_OUTPUT"
     - name: Run Smoketests
+      shell: bash
       run: |
         echo gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
         gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
