@@ -192,7 +192,6 @@ runs:
           if [ "${{ inputs.debug }}" = "true" ] ; then
             echo "isFinished: $isFinished"
           fi
-          isFinished=1 # TODO: remove this.
         done
 
         isSucccessful=$(echo ${runData} | jq  -c \
