@@ -89,6 +89,7 @@ runs:
           exit 1
         fi
     - name: Await Workflow
+      shell: bash
       continue-on-error: true
       if: ${{ inputs.goal == 'complete' || inputs.goal == 'success' }}
       run: |
