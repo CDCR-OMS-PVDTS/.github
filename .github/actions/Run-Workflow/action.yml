@@ -98,7 +98,7 @@ runs:
           echo "$(date -u +%T) UTC: Waiting 30 seconds to check workflow status ..."
           sleep 30s
           runData="$(gh run list --repo "${{ inputs.repo }}" --json "${fieldlist}" --workflow ${{ inputs.workflow }} --limit 1)"
-          if [ ${{ inputs.debug }} -eq "true" ] ; then
+          if [ "${{ inputs.debug }}" = "true" ] ; then
             echo "runData:"
             echo "$runData" | jq .
           fi
@@ -118,7 +118,7 @@ runs:
               ;;
           esac
 
-          if [ ${{ inputs.debug }} -eq "true" ] ; then
+          if [ "${{ inputs.debug }}" = "true" ] ; then
             echo "isFinished: $isFinished"
             current_url=$(echo ${runData} | jq  -c '.[0].url')
             echo "current_url: ${current_url}"
@@ -128,7 +128,7 @@ runs:
         isSucccessful=$(echo ${runData} | jq  -c \
         '[.[] | select(.conclusion == "success")?] | length')
 
-        if [ ${{ inputs.debug }} -eq "true" ] ; then
+        if [ "${{ inputs.debug }}" = "true" ] ; then
           echo "isSucccessful: $isSucccessful"
         fi
 
