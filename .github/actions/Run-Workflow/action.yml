@@ -121,59 +121,60 @@ runs:
               echo "$runData" | jq \
               '[.[] | select(.name | contains("Build"))?]'
               echo ""
+              echo "wait_name_filter: ${{ inputs.wait_name_filter }}"
               echo "wait_name_filter"
               echo "$runData" | jq \
               --arg name "${{ inputs.wait_name_filter }}" \
               '$name'
               echo ""
-              echo "runData.name.contains(Build):"
+              echo "runData.name.contains(filter):"
               echo "$runData" | jq \
               --arg name "${{ inputs.wait_name_filter }}" \
               '[.[] | select(.name | contains($name))?]'
             fi
           fi
           
-          # case "${{ inputs.goal }}" in
-          #   success) 
-          #     if [ "${{ inputs.debug }}" = "true" ] ; then
-          #       echo "running success check"
-          #     fi
-          #     isFinished=$(echo ${runData} | jq  -c \
-          #     --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-          #     --arg ref "${{ inputs.ref }}" \
-          #     --arg name "${{ inputs.wait_name_filter }}" \
-          #     '[.[] | select(.createdAt >= $startTime and .conclusion == "success" and .headBranch == $ref)?] | length')
-          #     ;;
-          #   complete) 
-          #     if [ "${{ inputs.debug }}" = "true" ] ; then
-          #       echo "running success check"
-          #     fi
-          #     isFinished=$(echo ${runData} | jq  -c \
-          #     --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-          #     --arg ref "${{ inputs.ref }}" \
-          #     --arg name "${{ inputs.wait_name_filter }}" \
-          #     '[.[] | select(.createdAt >= $startTime and .status == "completed" and .headBranch == $ref)?] | length')
-          #     ;;
-          # esac
+          case "${{ inputs.goal }}" in
+            success) 
+              if [ "${{ inputs.debug }}" = "true" ] ; then
+                echo "running success check"
+              fi
+              isFinished=$(echo ${runData} | jq  -c \
+              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
+              --arg ref "${{ inputs.ref }}" \
+              --arg name "${{ inputs.wait_name_filter }}" \
+              '[.[] | select(.createdAt >= $startTime and .conclusion == "success" and .headBranch == $ref)?] | length')
+              ;;
+            complete) 
+              if [ "${{ inputs.debug }}" = "true" ] ; then
+                echo "running success check"
+              fi
+              isFinished=$(echo ${runData} | jq  -c \
+              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
+              --arg ref "${{ inputs.ref }}" \
+              --arg name "${{ inputs.wait_name_filter }}" \
+              '[.[] | select(.createdAt >= $startTime and .status == "completed" and .headBranch == $ref)?] | length')
+              ;;
+          esac
 
-          # if [ "${{ inputs.debug }}" = "true" ] ; then
-          #   echo "isFinished: $isFinished"
-          # fi
+          if [ "${{ inputs.debug }}" = "true" ] ; then
+            echo "isFinished: $isFinished"
+          fi
         done
 
-        # isSucccessful=$(echo ${runData} | jq  -c \
-        # '[.[] | select(.conclusion == "success")?] | length')
+        isSucccessful=$(echo ${runData} | jq  -c \
+        '[.[] | select(.conclusion == "success")?] | length')
 
-        # if [ "${{ inputs.debug }}" = "true" ] ; then
-        #   echo "isSucccessful: $isSucccessful"
-        # fi
+        if [ "${{ inputs.debug }}" = "true" ] ; then
+          echo "isSucccessful: $isSucccessful"
+        fi
 
-        # url=$(echo ${runData} | jq  -c '.[0].url')
-        # echo "Url of run: ${url}"
+        url=$(echo ${runData} | jq  -c '.[0].url')
+        echo "Url of run: ${url}"
 
-        # if [ $isSucccessful -gt 0 ] ; then
-        #   echo "Workflow Completed Sucessfully"
-        # else
-        #   echo "*** Workflow Completed With Errors ****"
-        #   # TODO Add an option to fail this workflow if the child workflow failed
-        # fi
+        if [ $isSucccessful -gt 0 ] ; then
+          echo "Workflow Completed Sucessfully"
+        else
+          echo "*** Workflow Completed With Errors ****"
+          # TODO Add an option to fail this workflow if the child workflow failed
+        fi
