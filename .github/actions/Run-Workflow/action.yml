@@ -148,14 +148,14 @@ runs:
               --arg startTime "${{ steps.set_values.outputs.startTime }}" \
               --arg ref "${{ inputs.ref }}" \
               --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .conclusion == "success" and .headBranch == $ref)?]')
+              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .conclusion == "success" and .headBranch == $ref)?]'
               echo ""
               echo "runData.name.contains(startTime and (filter) and status and branch):"
               echo "$runData" | jq \
               --arg startTime "${{ steps.set_values.outputs.startTime }}" \
               --arg ref "${{ inputs.ref }}" \
               --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .status == "completed" and .headBranch == $ref)?]')
+              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .status == "completed" and .headBranch == $ref)?]'
             fi
           fi
           
