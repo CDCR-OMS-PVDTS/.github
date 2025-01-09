@@ -17,6 +17,9 @@ inputs:
   access_token:
     description: 'GitHub access token to use to access repo'
     required: true
+  wait_name_filter:
+    description: 'The run must have this text in its name, blank to not filter'
+    required: false
   field1:
     description: 'a field to send to the workflow in the form name=value'
     required: false
@@ -104,8 +107,12 @@ runs:
           if [ "${{ inputs.debug }}" = "true" ] ; then
             echo "goal: ${{ inputs.goal }}"
             echo "ref: ${{ inputs.ref }}"
-            echo "runData:"
-            echo "$runData" | jq .
+            if [ "$runData" = "gh failed" ] ; then
+              echo "runData: $runData"
+            else
+              echo "runData:"
+              echo "$runData" | jq .
+            FI
           fi
           
           case "${{ inputs.goal }}" in
@@ -116,7 +123,8 @@ runs:
               isFinished=$(echo ${runData} | jq  -c \
               --arg startTime "${{ steps.set_values.outputs.startTime }}" \
               --arg ref "${{ inputs.ref }}" \
-              '[.[] | select(.createdAt >= $startTime and .conclusion == "success" and .headBranch == $ref)?] | length')
+              --arg name "${{ inputs.wait_name_filter }}" \
+              '[.[] | select(.createdAt >= $startTime and .conclusion == "success" and (.name | contains($name)) and .headBranch == $ref)?] | length')
               ;;
             complete) 
               if [ "${{ inputs.debug }}" = "true" ] ; then
@@ -125,7 +133,8 @@ runs:
               isFinished=$(echo ${runData} | jq  -c \
               --arg startTime "${{ steps.set_values.outputs.startTime }}" \
               --arg ref "${{ inputs.ref }}" \
-              '[.[] | select(.createdAt >= $startTime and .status == "completed" and .headBranch == $ref)?] | length')
+              --arg name "${{ inputs.wait_name_filter }}" \
+              '[.[] | select(.createdAt >= $startTime and .status == "completed" and (.name | contains($name)) and .headBranch == $ref)?] | length')
               ;;
           esac
 
