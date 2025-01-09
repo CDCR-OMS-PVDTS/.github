@@ -102,29 +102,35 @@ runs:
           sleep 30s
           runData="$(gh run list --repo "${{ inputs.repo }}" --json "${fieldlist}" --workflow ${{ inputs.workflow }} --limit 1 || "gh failed")"
           if [ "${{ inputs.debug }}" = "true" ] ; then
+            echo "goal: ${{ inputs.goal }}"
+            echo "ref: ${{ inputs.ref }}"
             echo "runData:"
             echo "$runData" | jq .
           fi
           
           case "${{ inputs.goal }}" in
             success) 
+              if [ "${{ inputs.debug }}" = "true" ] ; then
+                echo "running success check"
+              fi
               isFinished=$(echo ${runData} | jq  -c \
               --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-              --arg ref "${ref}" \
+              --arg ref "${{ inputs.ref }}" \
               '[.[] | select(.createdAt >= $startTime and .conclusion == "success" and .headBranch == $ref)?] | length')
               ;;
             complete) 
+              if [ "${{ inputs.debug }}" = "true" ] ; then
+                echo "running success check"
+              fi
               isFinished=$(echo ${runData} | jq  -c \
               --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-              --arg ref "${ref}" \
+              --arg ref "${{ inputs.ref }}" \
               '[.[] | select(.createdAt >= $startTime and .status == "completed" and .headBranch == $ref)?] | length')
               ;;
           esac
 
           if [ "${{ inputs.debug }}" = "true" ] ; then
             echo "isFinished: $isFinished"
-            current_url=$(echo ${runData} | jq  -c '.[0].url')
-            echo "current_url: ${current_url}"
           fi
         done
 
