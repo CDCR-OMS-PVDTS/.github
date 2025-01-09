@@ -64,6 +64,7 @@ runs:
         echo workflow: "${{ inputs.workflow }}"
         echo ref: "${{ inputs.ref }}"
         echo goal: "${{ inputs.goal }}"
+        echo wait name filter: "${{ inputs.wait_name_filter }}"
         if [ -n "${{ inputs.debug }}" ] ; then
           echo debug: "${{ inputs.debug }}"
         fi
@@ -118,17 +119,17 @@ runs:
               echo ""
               echo "runData.name.contains(Build):"
               echo "$runData" | jq \
-              '[.[] | select(.name | contains("Build"))?]')
+              '[.[] | select(.name | contains("Build"))?]'
               echo ""
               echo "wait_name_filter"
               echo "$runData" | jq \
               --arg name "${{ inputs.wait_name_filter }}" \
-              '$name')
+              '$name'
               echo ""
               echo "runData.name.contains(Build):"
               echo "$runData" | jq \
               --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.name | contains($name))?]')
+              '[.[] | select(.name | contains($name))?]'
             FI
           fi
           
