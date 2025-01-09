@@ -157,12 +157,26 @@ runs:
               --arg name "${{ inputs.wait_name_filter }}" \
               '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .conclusion == "success" and .headBranch == $ref)?]'
               echo ""
+              echo "runData.name.contains(startTime and (filter) and conclusion and branch).length:"
+              echo "$runData" | jq \
+              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
+              --arg ref "${{ inputs.ref }}" \
+              --arg name "${{ inputs.wait_name_filter }}" \
+              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .conclusion == "success" and .headBranch == $ref)?] | length'
+              echo ""
               echo "runData.name.contains(startTime and (filter) and status and branch):"
               echo "$runData" | jq \
               --arg startTime "${{ steps.set_values.outputs.startTime }}" \
               --arg ref "${{ inputs.ref }}" \
               --arg name "${{ inputs.wait_name_filter }}" \
               '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .status == "completed" and .headBranch == $ref)?]'
+              echo ""
+              echo "runData.name.contains(startTime and (filter) and status and branch).length:"
+              echo "$runData" | jq \
+              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
+              --arg ref "${{ inputs.ref }}" \
+              --arg name "${{ inputs.wait_name_filter }}" \
+              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .status == "completed" and .headBranch == $ref)?] | length'
             fi
           fi
           
@@ -175,7 +189,7 @@ runs:
               --arg startTime "${{ steps.set_values.outputs.startTime }}" \
               --arg ref "${{ inputs.ref }}" \
               --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.createdAt >= $startTime and .conclusion == "success" and .headBranch == $ref)?] | length')
+              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .conclusion == "success" and .headBranch == $ref)?] | length')
               ;;
             complete) 
               if [ "${{ inputs.debug }}" = "true" ] ; then
@@ -185,7 +199,7 @@ runs:
               --arg startTime "${{ steps.set_values.outputs.startTime }}" \
               --arg ref "${{ inputs.ref }}" \
               --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.createdAt >= $startTime and .status == "completed" and .headBranch == $ref)?] | length')
+              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .status == "completed" and .headBranch == $ref)?] | length')
               ;;
           esac
 
