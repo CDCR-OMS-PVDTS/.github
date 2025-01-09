@@ -131,6 +131,16 @@ runs:
               echo "$runData" | jq \
               --arg name "${{ inputs.wait_name_filter }}" \
               '[.[] | select(.name | contains($name))?]'
+              echo ""
+              echo "runData.name.contains((filter)):"
+              echo "$runData" | jq \
+              --arg name "${{ inputs.wait_name_filter }}" \
+              '[.[] | select((.name | contains($name)))?]'
+              echo ""
+              echo "runData.name.contains(startTime and (filter)):"
+              echo "$runData" | jq \
+              --arg name "${{ inputs.wait_name_filter }}" \
+              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)))?]'
             fi
           fi
           
