@@ -79,7 +79,7 @@ runs:
         # timestamp just before the workflow is started
         echo "startTime=$(date -u +%FT%TZ)"
         echo "startTime=$(date -u +%FT%TZ)" >> "$GITHUB_OUTPUT"
-    - name: Run Smoketests
+    - name: Run Workflow
       shell: bash
       run: |
         echo gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
@@ -88,9 +88,42 @@ runs:
           printf "${RED}%s\n${NC}" "*** ERROR: Failed to run workflow"
           exit 1
         fi
-    # - name: Await Smoketests
-    #   working-directory: .github/scripts
-    #   continue-on-error: true
-    #   run: |
-    #     echo ./devops_await_workflow.sh -b "main" -o "${{ env.repo_owner }}" -p ${access_token} -r "${{ matrix.repo.name }}" -w "${{ matrix.workflow }}" -t ${{ steps.set_values.outputs.startTime }} -g "success"
-    #     ./devops_await_workflow.sh -b "main" -o "${{ env.repo_owner }}" -p ${access_token} -r "${{ matrix.repo.name }}" -w "${{ matrix.workflow }}" -t ${{ steps.set_values.outputs.startTime }} -g "success"
+    - name: Await Workflow
+      continue-on-error: true
+      if: ${{ inputs.goal == 'complete' || inputs.goal == 'success' }}
+      run: |
+        fieldlist="conclusion,createdAt,databaseId,event,headBranch,headSha,name,status,updatedAt,url,workflowDatabaseId"
+        isFinished=0
+        until [ $isFinished -gt 0 ] ; do
+          echo "$(date -u +%T) UTC: Waiting 30 seconds to check workflow status ..."
+          sleep 30s
+          runData="$(gh run list --repo "${{ inputs.repo }}" --json "${fieldlist}" --workflow ${{ inputs.workflow }} --limit 1)"
+          
+          case "${{ inputs.goal }}" in
+            success) 
+              isFinished=$(echo ${runData} | jq  -c \
+              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
+              --arg ref "${ref}" \
+              '[.[] | select(.createdAt >= $startTime and .conclusion == "success" and .headBranch == $ref)?] | length')
+              ;;
+            complete) 
+              isFinished=$(echo ${runData} | jq  -c \
+              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
+              --arg ref "${ref}" \
+              '[.[] | select(.createdAt >= $startTime and .status == "completed" and .headBranch == $ref)?] | length')
+              ;;
+          esac
+        done
+
+        isSucccessful=$(echo ${runData} | jq  -c \
+        '[.[] | select(.conclusion == "success")?] | length')
+
+        url=$(echo ${runData} | jq  -c '.[0].url')
+        echo "Url of run: ${url}"
+
+        if [ $isSucccessful -gt 0 ] ; then
+          echo "Workflow Completed Sucessfully"
+        else
+          echo "*** Workflow Completed With Errors ****"
+          # TODO Add an option to fail this workflow if the child workflow failed
+        fi
