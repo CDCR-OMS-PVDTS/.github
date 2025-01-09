@@ -143,6 +143,13 @@ runs:
               --arg name "${{ inputs.wait_name_filter }}" \
               '[.[] | select(.createdAt >= $startTime and (.name | contains($name)))?]'
               echo ""
+              echo "runData.name.contains(startTime and (filter) and conclusion):"
+              echo "$runData" | jq \
+              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
+              --arg ref "${{ inputs.ref }}" \
+              --arg name "${{ inputs.wait_name_filter }}" \
+              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .conclusion == "success")?]'
+              echo ""
               echo "runData.name.contains(startTime and (filter) and conclusion and branch):"
               echo "$runData" | jq \
               --arg startTime "${{ steps.set_values.outputs.startTime }}" \
@@ -185,6 +192,7 @@ runs:
           if [ "${{ inputs.debug }}" = "true" ] ; then
             echo "isFinished: $isFinished"
           fi
+          isFinished=1 # TODO: remove this.
         done
 
         isSucccessful=$(echo ${runData} | jq  -c \
