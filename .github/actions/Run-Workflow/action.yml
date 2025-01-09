@@ -47,10 +47,9 @@ inputs:
   field10:
     description: 'a field to send to the workflow in the form name=value'
     required: false
-outputs:
-  random-number:
-    description: "Random number"
-    value: ${{ steps.random-number-generator.outputs.random-number }}
+  debug:
+    description: 'display detailed results when value is "true"'
+    required: false
 runs:
   using: "composite"
   steps:
@@ -99,6 +98,10 @@ runs:
           echo "$(date -u +%T) UTC: Waiting 30 seconds to check workflow status ..."
           sleep 30s
           runData="$(gh run list --repo "${{ inputs.repo }}" --json "${fieldlist}" --workflow ${{ inputs.workflow }} --limit 1)"
+          if [ ${{ inputs.debug }} -eq "true" ]
+            echo "runData:"
+            echo "$runData" | jq .
+          fi
           
           case "${{ inputs.goal }}" in
             success) 
@@ -114,10 +117,20 @@ runs:
               '[.[] | select(.createdAt >= $startTime and .status == "completed" and .headBranch == $ref)?] | length')
               ;;
           esac
+
+          if [ ${{ inputs.debug }} -eq "true" ]
+            echo "isFinished: $isFinished"
+            current_url=$(echo ${runData} | jq  -c '.[0].url')
+            echo "current_url: ${current_url}"
+          fi
         done
 
         isSucccessful=$(echo ${runData} | jq  -c \
         '[.[] | select(.conclusion == "success")?] | length')
+
+        if [ ${{ inputs.debug }} -eq "true" ]
+          echo "isSucccessful: $isSucccessful"
+        fi
 
         url=$(echo ${runData} | jq  -c '.[0].url')
         echo "Url of run: ${url}"
