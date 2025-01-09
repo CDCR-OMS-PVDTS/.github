@@ -102,7 +102,7 @@ runs:
         fieldlist="conclusion,createdAt,databaseId,event,headBranch,headSha,name,status,updatedAt,url,workflowDatabaseId"
         isFinished=0
         until [ $isFinished -gt 0 ] ; do
-          # echo "$(date -u +%T) UTC: Waiting 30 seconds to check workflow status ..."
+          echo "$(date -u +%T) UTC: Waiting 30 seconds to check workflow status ..."
           # sleep 30s
           # runData="$(gh run list --repo "${{ inputs.repo }}" --json "${fieldlist}" --workflow ${{ inputs.workflow }} --limit 1 || echo "gh failed")"
           # if [ "${{ inputs.debug }}" = "true" ] ; then
