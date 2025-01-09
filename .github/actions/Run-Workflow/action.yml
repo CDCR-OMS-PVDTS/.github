@@ -97,7 +97,7 @@ runs:
         until [ $isFinished -gt 0 ] ; do
           echo "$(date -u +%T) UTC: Waiting 30 seconds to check workflow status ..."
           sleep 30s
-          runData="$(gh run list --repo "${{ inputs.repo }}" --json "${fieldlist}" --workflow ${{ inputs.workflow }} --limit 1)"
+          runData="$(gh run list --repo "${{ inputs.repo }}" --json "${fieldlist}" --workflow ${{ inputs.workflow }} --limit 1 || "gh failed")"
           if [ "${{ inputs.debug }}" = "true" ] ; then
             echo "runData:"
             echo "$runData" | jq .
