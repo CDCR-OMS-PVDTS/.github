@@ -103,35 +103,35 @@ runs:
         isFinished=0
         until [ $isFinished -gt 0 ] ; do
           echo "$(date -u +%T) UTC: Waiting 30 seconds to check workflow status ..."
-          # sleep 30s
-          # runData="$(gh run list --repo "${{ inputs.repo }}" --json "${fieldlist}" --workflow ${{ inputs.workflow }} --limit 1 || echo "gh failed")"
-          # if [ "${{ inputs.debug }}" = "true" ] ; then
-          #   echo "goal: ${{ inputs.goal }}"
-          #   echo "ref: ${{ inputs.ref }}"
-          #   if [ "$runData" = "gh failed" ] ; then
-          #     echo "runData: $runData"
-          #   else
-          #     echo "runData:"
-          #     echo "$runData" | jq .
-          #     echo ""
-          #     echo "runData.name:"
-          #     echo "$runData" | jq '[.[] | .name?]'
-          #     echo ""
-          #     echo "runData.name.contains(Build):"
-          #     echo "$runData" | jq \
-          #     '[.[] | select(.name | contains("Build"))?]'
-          #     echo ""
-          #     echo "wait_name_filter"
-          #     echo "$runData" | jq \
-          #     --arg name "${{ inputs.wait_name_filter }}" \
-          #     '$name'
-          #     echo ""
-          #     echo "runData.name.contains(Build):"
-          #     echo "$runData" | jq \
-          #     --arg name "${{ inputs.wait_name_filter }}" \
-          #     '[.[] | select(.name | contains($name))?]'
-          #   FI
-          # fi
+          sleep 30s
+          runData="$(gh run list --repo "${{ inputs.repo }}" --json "${fieldlist}" --workflow ${{ inputs.workflow }} --limit 1 || echo "gh failed")"
+          if [ "${{ inputs.debug }}" = "true" ] ; then
+            echo "goal: ${{ inputs.goal }}"
+            echo "ref: ${{ inputs.ref }}"
+            if [ "$runData" = "gh failed" ] ; then
+              echo "runData: $runData"
+            else
+              echo "runData:"
+              echo "$runData" | jq .
+              echo ""
+              echo "runData.name:"
+              echo "$runData" | jq '[.[] | .name?]'
+              echo ""
+              echo "runData.name.contains(Build):"
+              echo "$runData" | jq \
+              '[.[] | select(.name | contains("Build"))?]'
+              echo ""
+              echo "wait_name_filter"
+              echo "$runData" | jq \
+              --arg name "${{ inputs.wait_name_filter }}" \
+              '$name'
+              echo ""
+              echo "runData.name.contains(Build):"
+              echo "$runData" | jq \
+              --arg name "${{ inputs.wait_name_filter }}" \
+              '[.[] | select(.name | contains($name))?]'
+            FI
+          fi
           
           # case "${{ inputs.goal }}" in
           #   success) 
