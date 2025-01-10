@@ -114,14 +114,51 @@ runs:
               echo "runData:"
               echo "$runData" | jq .
               echo ""
-              echo "runData.name.contains(startTime and (filter) and conclusion and branch).length:"
+              echo ""
+              echo "runData.fileterOn(startTime >= ${{ steps.set_values.outputs.startTime }}).length:"
+              echo "$runData" | jq \
+              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
+              --arg ref "${{ inputs.ref }}" \
+              --arg name "${{ inputs.wait_name_filter }}" \
+              '[.[] | select(.createdAt >= $startTime)?] | length'
+              echo ""
+              echo "runData.fileterOn(name contains(${{ inputs.wait_name_filter }})).length:"
+              echo "$runData" | jq \
+              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
+              --arg ref "${{ inputs.ref }}" \
+              --arg name "${{ inputs.wait_name_filter }}" \
+              '[.[] | select((.name | contains($name)))?] | length'
+              echo ""
+              echo "runData.fileterOn(conclusion = success).length:"
+              echo "$runData" | jq \
+              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
+              --arg ref "${{ inputs.ref }}" \
+              --arg name "${{ inputs.wait_name_filter }}" \
+              '[.[] | select(.conclusion == "success")?] | length'
+              echo ""
+              echo "runData.fileterOn(branch = ${{ inputs.ref }}).length:"
+              echo "$runData" | jq \
+              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
+              --arg ref "${{ inputs.ref }}" \
+              --arg name "${{ inputs.wait_name_filter }}" \
+              '[.[] | select(.headBranch == $ref)?] | length'
+              echo ""
+              echo "runData.fileterOn(status = completed).length:"
+              echo "$runData" | jq \
+              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
+              --arg ref "${{ inputs.ref }}" \
+              --arg name "${{ inputs.wait_name_filter }}" \
+              '[.[] | select(.status == "completed")?] | length'
+              echo ""
+              echo ""
+              echo "runData.fileterOn(startTime and (filter) and conclusion and branch).length:"
               echo "$runData" | jq \
               --arg startTime "${{ steps.set_values.outputs.startTime }}" \
               --arg ref "${{ inputs.ref }}" \
               --arg name "${{ inputs.wait_name_filter }}" \
               '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .conclusion == "success" and .headBranch == $ref)?] | length'
               echo ""
-              echo "runData.name.contains(startTime and (filter) and status and branch).length:"
+              echo "runData.fileterOn(startTime and (filter) and status and branch).length:"
               echo "$runData" | jq \
               --arg startTime "${{ steps.set_values.outputs.startTime }}" \
               --arg ref "${{ inputs.ref }}" \
