@@ -114,62 +114,12 @@ runs:
               echo "runData:"
               echo "$runData" | jq .
               echo ""
-              echo "runData.name:"
-              echo "$runData" | jq '[.[] | .name?]'
-              echo ""
-              echo "runData.name.contains(Build):"
-              echo "$runData" | jq \
-              '[.[] | select(.name | contains("Build"))?]'
-              echo ""
-              echo "wait_name_filter: ${{ inputs.wait_name_filter }}"
-              echo "wait_name_filter"
-              echo "$runData" | jq \
-              --arg name "${{ inputs.wait_name_filter }}" \
-              '$name'
-              echo ""
-              echo "runData.name.contains(filter):"
-              echo "$runData" | jq \
-              --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.name | contains($name))?]'
-              echo ""
-              echo "runData.name.contains((filter)):"
-              echo "$runData" | jq \
-              --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select((.name | contains($name)))?]'
-              echo ""
-              echo "runData.name.contains(startTime and (filter)):"
-              echo "$runData" | jq \
-              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-              --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)))?]'
-              echo ""
-              echo "runData.name.contains(startTime and (filter) and conclusion):"
-              echo "$runData" | jq \
-              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-              --arg ref "${{ inputs.ref }}" \
-              --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .conclusion == "success")?]'
-              echo ""
-              echo "runData.name.contains(startTime and (filter) and conclusion and branch):"
-              echo "$runData" | jq \
-              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-              --arg ref "${{ inputs.ref }}" \
-              --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .conclusion == "success" and .headBranch == $ref)?]'
-              echo ""
               echo "runData.name.contains(startTime and (filter) and conclusion and branch).length:"
               echo "$runData" | jq \
               --arg startTime "${{ steps.set_values.outputs.startTime }}" \
               --arg ref "${{ inputs.ref }}" \
               --arg name "${{ inputs.wait_name_filter }}" \
               '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .conclusion == "success" and .headBranch == $ref)?] | length'
-              echo ""
-              echo "runData.name.contains(startTime and (filter) and status and branch):"
-              echo "$runData" | jq \
-              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-              --arg ref "${{ inputs.ref }}" \
-              --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .status == "completed" and .headBranch == $ref)?]'
               echo ""
               echo "runData.name.contains(startTime and (filter) and status and branch).length:"
               echo "$runData" | jq \
@@ -180,28 +130,30 @@ runs:
             fi
           fi
           
-          case "${{ inputs.goal }}" in
-            success) 
-              if [ "${{ inputs.debug }}" = "true" ] ; then
-                echo "running success check"
-              fi
-              isFinished=$(echo ${runData} | jq  -c \
-              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-              --arg ref "${{ inputs.ref }}" \
-              --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .conclusion == "success" and .headBranch == $ref)?] | length')
-              ;;
-            complete) 
-              if [ "${{ inputs.debug }}" = "true" ] ; then
-                echo "running success check"
-              fi
-              isFinished=$(echo ${runData} | jq  -c \
-              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-              --arg ref "${{ inputs.ref }}" \
-              --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .status == "completed" and .headBranch == $ref)?] | length')
-              ;;
-          esac
+          if [ "$runData" != "gh failed" ] ; then
+            case "${{ inputs.goal }}" in
+              success) 
+                if [ "${{ inputs.debug }}" = "true" ] ; then
+                  echo "running success check"
+                fi
+                isFinished=$(echo ${runData} | jq  -c \
+                --arg startTime "${{ steps.set_values.outputs.startTime }}" \
+                --arg ref "${{ inputs.ref }}" \
+                --arg name "${{ inputs.wait_name_filter }}" \
+                '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .conclusion == "success" and .headBranch == $ref)?] | length')
+                ;;
+              complete) 
+                if [ "${{ inputs.debug }}" = "true" ] ; then
+                  echo "running success check"
+                fi
+                isFinished=$(echo ${runData} | jq  -c \
+                --arg startTime "${{ steps.set_values.outputs.startTime }}" \
+                --arg ref "${{ inputs.ref }}" \
+                --arg name "${{ inputs.wait_name_filter }}" \
+                '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .status == "completed" and .headBranch == $ref)?] | length')
+                ;;
+            esac
+          fi
 
           if [ "${{ inputs.debug }}" = "true" ] ; then
             echo "isFinished: $isFinished"
