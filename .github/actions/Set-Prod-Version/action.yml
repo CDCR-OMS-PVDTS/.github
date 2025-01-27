@@ -18,7 +18,7 @@ runs:
       run: |
           gh api "repos/${{ inputs.repo }}/deployments" \
           -H "Accept: application/vnd.github+json" \
-          -f "ref=main" \
+          -f "ref=${{ inputs.release_tag }}" \
           -f 'payload={ 
             "release_tag": "${{ inputs.release_tag }}", 
             "rc_tag": "${{ inputs.rc_tag }}"
