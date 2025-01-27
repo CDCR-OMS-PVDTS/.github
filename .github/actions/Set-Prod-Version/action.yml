@@ -27,5 +27,5 @@ runs:
           -f "description=Annother way to give info" \
           -F "auto_merge=false" \
           -f "required_contexts[]" \
-          -F "production_environment=true"
+          -F "production_environment=true" \
           | jq '.'
