@@ -1,0 +1,31 @@
+name: 'Set Prod Version'
+description: 'Creates a Deployment to mark the latest production version for the purposes of comparison.'
+inputs:
+  repo:
+    description: 'format: {owner}/{name}'
+    required: true
+  release_tag:
+    description: 'The tag of the current production release'
+    required: true
+  rc_tag:
+    description: 'The tag of the release candidate that the current production release was made from (optional but recomended)'
+    required: false
+runs:
+  using: "composite"
+  steps:
+    - name: Add Deployment
+      shell: bash
+      run: |
+          gh api "repos/${{ inputs.repo }}/deployments" \
+          -H "Accept: application/vnd.github+json" \
+          -f "ref=${{ inputs.release_tag }}" \
+          -f 'payload={ 
+            "release_tag": "${{ inputs.release_tag }}", 
+            "rc_tag": "${{ inputs.rc_tag }}"
+          }' \
+          -f "environment=release" \
+          -f "description=Annother way to give info" \
+          -F "auto_merge=false" \
+          -f "required_contexts[]" \
+          -F "production_environment=true" \
+          | jq '.'
