@@ -86,8 +86,12 @@ runs:
         echo "startTime=$(date -u +%FT%TZ)"
         echo "startTime=$(date -u +%FT%TZ)" >> "$GITHUB_OUTPUT"
     - name: Run Workflow
+      uses: nick-fields/retry@v3
+      timeout_minutes: 10
+      max_attempts: 3
       shell: bash
-      run: |
+    #   run: |
+      command: |
         echo gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
         gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
         if [[ "$?" != 0 ]]; then

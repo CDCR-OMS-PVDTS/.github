@@ -14,8 +14,12 @@ runs:
   using: "composite"
   steps:
     - name: Add Deployment
+      uses: nick-fields/retry@v3
+      timeout_minutes: 10
+      max_attempts: 3
       shell: bash
-      run: |
+    #   run: |
+      command: |
           gh api "repos/${{ inputs.repo }}/deployments" \
           -H "Accept: application/vnd.github+json" \
           -f "ref=${{ inputs.release_tag }}" \
