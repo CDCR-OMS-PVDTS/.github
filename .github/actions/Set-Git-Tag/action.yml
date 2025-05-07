@@ -16,17 +16,13 @@ runs:
     - name: Set Tag
       shell: bash
       run: |
-        echo "aaaaaaaaaaaaaaaaaaa"
-        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref>"")'
-        echo "bbbbbbbbbbbbbbbbbbb"
-        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="")'
-        echo "ccccccccccccccccccc"
-        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/RunWorkflow.v.1.0.0")'
-        echo "ddddddddddddddddddd"
         echo "inputs.ref: ${{ inputs.ref }}"
-        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}")'
-        echo "eeeeeeeeeeeeeeeeeee"
+        echo "aaaaaaaaaaaaaaaaaaa"
+        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object'
+        echo "bbbbbbbbbbbbbbbbbbb"
         gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object'
+        echo "ccccccccccccccccccc"
+        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha'
         echo "fffffffffffffffffff"
         gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha'
         echo "ggggggggggggggggggg"
