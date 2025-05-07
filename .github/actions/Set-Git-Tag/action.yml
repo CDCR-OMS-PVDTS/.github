@@ -17,7 +17,7 @@ runs:
       shell: bash
       run: |
         echo "inputs.ref: ${{ inputs.ref }}"
-        @urlencode the ref
+        # urlencode the ref
         url_ref=$(jq -rn '"${{ inputs.ref }}"|@uri')
         echo "url_ref: $url_ref"
 
