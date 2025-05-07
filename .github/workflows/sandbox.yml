@@ -1,0 +1,15 @@
+# This workflow is intended to be used to test. The main branch version does nothing. 
+# It should not be changed in the main branch.
+name: Workflow Sandbox
+
+on:
+  workflow_dispatch:
+
+jobs:
+  do-some-nothing:
+    runs-on: 
+      group: ${{ vars.BUILD_MT2_RUNNER_GROUP }}
+      labels: self-hosted
+    steps: # a workflow must have a step, if false makes it not actually run
+      - if: false 
+        run: echo ""
