@@ -15,5 +15,5 @@ jobs:
         name: Set Git Tag
         with:
           repo: '${{ github.repository }}'
-          ref: "23526-SetGitTag"
+          ref: "AB#23526-SetGitTag"
           tag: "jacob.test"

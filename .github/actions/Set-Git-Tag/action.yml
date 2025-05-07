@@ -23,7 +23,7 @@ runs:
         echo "ccccccccccccccccccc"
         gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/RunWorkflow.v.1.0.0")'
         echo "ccccccccc++++++++++"
-        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/23526-SetGitTag")'
+        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/AB#23526-SetGitTag")'
         echo "ddddddddddddddddddd"
         echo "inputs.ref: ${{ inputs.ref }}""
         gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}")'
