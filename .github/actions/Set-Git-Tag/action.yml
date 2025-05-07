@@ -13,7 +13,9 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: |
+    - name: Set Tag
+      shell: bash
+      run: |
         sha=(gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha')
         echo "sha: $sha"
 
