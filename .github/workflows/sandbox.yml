@@ -6,8 +6,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  do-some-nothing:
+  do-something:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.PAT }}
     steps: # a workflow must have a step, if false makes it not actually run
       - uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Git-Tag@AB#23526-SetGitTag
         name: Set Git Tag
