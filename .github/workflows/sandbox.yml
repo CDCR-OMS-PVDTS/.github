@@ -7,9 +7,11 @@ on:
 
 jobs:
   do-some-nothing:
-    runs-on: 
-      group: ${{ vars.BUILD_MT2_RUNNER_GROUP }}
-      labels: self-hosted
+    runs-on: ubuntu-latest
     steps: # a workflow must have a step, if false makes it not actually run
-      - if: false 
-        run: echo ""
+      - uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Git-Tag#AB#23526-SetGitTag
+        name: Set Git Tag
+        with:
+          repo: '${{ github.repository }}'
+          ref: "23526-SetGitTag"
+          tag: "jacob.test"
