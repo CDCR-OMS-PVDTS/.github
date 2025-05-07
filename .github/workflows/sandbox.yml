@@ -15,5 +15,5 @@ jobs:
         name: Set Git Tag
         with:
           repo: '${{ github.repository }}'
-          ref: "AB#23526-SetGitTag"
+          ref: "RunWorkflow.v.1.0.0"
           tag: "jacob.test"
