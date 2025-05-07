@@ -18,21 +18,16 @@ runs:
       run: |
         echo "inputs.ref: ${{ inputs.ref }}"
         echo "aaaaaaaaaaaaaaaaaaa"
-        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha'
-        echo "bbbbbbbbbbbbbbbbbbb"
-        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha'
-        echo "ccccccccccccccccccc"
-        tags=$(gh api "repos/${{ inputs.repo }}/git/refs/tags")
-        echo "tags: ."
-        echo $tags
-        echo "ddddddddddddddddddd"
-        tags=$(gh api "repos/${{ inputs.repo }}/git/refs/tags")
-        echo "tags: ."
-        echo $tags | jq .
-        echo "fffffffffffffffffff"
         sha=$(gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha')
-        echo "ggggggggggggggggggg"
-        sha=$(gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha')
+        echo "tag sha: $sha"
+        if [[ -z "${sha}" ]]; then
+          sha=$(gh api "repos/${{ inputs.repo }}/git/refs/heads" | jq -r '.[] | select(.ref=="refs/heads/${{ inputs.ref }}") | .object.sha')
+          echo "branch sha: $sha"
+        fi
+        if [[ -z "${sha}" ]]; then
+          sha=$(gh api "repos/${{ inputs.repo }}/.github/commits" | jq -r '.[] | select(.sha=="${{ inputs.ref }}" or .sha[0:7]=="${{ inputs.ref }}" or .sha[0:8]=="${{ inputs.ref }}")')
+          echo "sha sha: $sha"
+        fi
         echo "sha: $sha"
 
         gh api \
