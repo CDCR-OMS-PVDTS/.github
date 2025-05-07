@@ -11,11 +11,24 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.PAT }}
     steps: # a workflow must have a step, if false makes it not actually run
-      - uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Git-Tag@AB#23526-SetGitTag
-        name: Set Git Tag
-        with:
-          repo: '${{ github.repository }}'
-          #ref: "RunWorkflow.v.1.0.0"
-          #ref: "AB#23526-SetGitTag"
-          ref: "8c2d4e05f98820f340cd904d76a17759ac8734db"
-          tag: "jacob.test"
+    - uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Git-Tag@AB#23526-SetGitTag
+      name: Set Git Tag
+      continue-on-error: true
+      with:
+        repo: '${{ github.repository }}'
+        ref: "RunWorkflow.v.1.0.0"
+        tag: "jacob.test.tag"
+    - uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Git-Tag@AB#23526-SetGitTag
+      name: Set Git Tag
+      continue-on-error: true
+      with:
+        repo: '${{ github.repository }}'
+        ref: "AB#23526-SetGitTag"
+        tag: "jacob.test.branch"
+    - uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Git-Tag@AB#23526-SetGitTag
+      name: Set Git Tag
+      continue-on-error: true
+      with:
+        repo: '${{ github.repository }}'
+        ref: "8c2d4e05f98820f340cd904d76a17759ac8734db"
+        tag: "jacob.test.sha"
