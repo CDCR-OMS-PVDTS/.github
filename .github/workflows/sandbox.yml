@@ -9,7 +9,7 @@ jobs:
   do-some-nothing:
     runs-on: ubuntu-latest
     steps: # a workflow must have a step, if false makes it not actually run
-      - uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Git-Tag#AB#23526-SetGitTag
+      - uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Git-Tag@AB#23526-SetGitTag
         name: Set Git Tag
         with:
           repo: '${{ github.repository }}'
