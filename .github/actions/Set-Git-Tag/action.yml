@@ -17,9 +17,13 @@ runs:
       shell: bash
       run: |
         echo "aaaaaaaaaaaaaaaaaaa"
-        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[]'
-        echo "bbbbbbbbbbbbbbbbbbb"
         gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref>"")'
+        echo "bbbbbbbbbbbbbbbbbbb"
+        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="")'
+        echo "bbbbbbbb+++++++++++"
+        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/rc.204")'
+        echo "cccccccc-----------"
+        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/rc.209")'
         echo "ccccccccccccccccccc"
         gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/rc.204")'
         echo "ddddddddddddddddddd"
