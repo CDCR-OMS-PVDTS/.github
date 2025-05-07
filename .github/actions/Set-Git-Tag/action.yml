@@ -21,6 +21,8 @@ runs:
         url_ref=$(jq -rn '"${{ inputs.ref }}"|@uri')
         echo "url_ref: $url_ref"
 
+        d=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/tags/30f5146e12" | jq -r '.object.sha') || true
+        echo "d: $d"
         c=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/tags/30f5146e12" | jq -r '.object.sha' || "") || true
         echo "c: $c"
         b=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/tags/30f5146e12" | jq -r '.object.sha' || "")
