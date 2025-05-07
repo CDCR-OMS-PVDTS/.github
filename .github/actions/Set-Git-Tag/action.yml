@@ -35,6 +35,8 @@ runs:
           echo "ddddddddddddddddddd"
           gh api "repos/${{ inputs.repo }}/commits" | jq -r '.[] | select(.sha=="${{ inputs.ref }}" or .sha[0:7]=="${{ inputs.ref }}" or .sha[0:8]=="${{ inputs.ref }}")'
           echo "eeeeeeeeeeeeeeeeeee"
+          gh api "repos/CDCR-OMS-PVDTS/.github/commits/${{ inputs.ref }}" | jq '.sha'
+          echo "fffffffffffffffffff"
           sha=$(gh api "repos/${{ inputs.repo }}/commits" | jq -r '.[] | select(.sha=="${{ inputs.ref }}" or .sha[0:7]=="${{ inputs.ref }}" or .sha[0:8]=="${{ inputs.ref }}")')
           echo "sha sha: $sha"
         fi
