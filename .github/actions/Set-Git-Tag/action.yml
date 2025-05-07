@@ -22,6 +22,10 @@ runs:
         echo "bbbbbbbbbbbbbbbbbbb"
         gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha'
         echo "ccccccccccccccccccc"
+        tags=(gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -c '.')
+        echo "tags: ."
+        echo $tags | jq .
+        echo "ddddddddddddddddddd"
         sha=(gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha')
         echo "ggggggggggggggggggg"
         sha=(gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha')
