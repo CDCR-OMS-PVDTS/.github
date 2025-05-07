@@ -24,16 +24,18 @@ runs:
           echo "branch sha: $sha"
         fi
         if [[ -z "${sha}" ]]; then
+          echo "aaaaaaaaa--------------"
+          echo gh api "repos/${{ inputs.repo }}/commits"
           echo "aaaaaaaaaaaaaaaaaaa"
-          gh api "repos/${{ inputs.repo }}/.github/commits"
+          gh api "repos/${{ inputs.repo }}/commits"
           echo "bbbbbbbbbbbbbbbbbbb"
-          gh api "repos/${{ inputs.repo }}/.github/commits" | jq -r '.[]'
+          gh api "repos/${{ inputs.repo }}/commits" | jq -r '.[]'
           echo "ccccccccccccccccccc"
-          gh api "repos/${{ inputs.repo }}/.github/commits" | jq -r '.[] | select(.sha=="${{ inputs.ref }}")'
+          gh api "repos/${{ inputs.repo }}/commits" | jq -r '.[] | select(.sha=="${{ inputs.ref }}")'
           echo "ddddddddddddddddddd"
-          gh api "repos/${{ inputs.repo }}/.github/commits" | jq -r '.[] | select(.sha=="${{ inputs.ref }}" or .sha[0:7]=="${{ inputs.ref }}" or .sha[0:8]=="${{ inputs.ref }}")'
+          gh api "repos/${{ inputs.repo }}/commits" | jq -r '.[] | select(.sha=="${{ inputs.ref }}" or .sha[0:7]=="${{ inputs.ref }}" or .sha[0:8]=="${{ inputs.ref }}")'
           echo "eeeeeeeeeeeeeeeeeee"
-          sha=$(gh api "repos/${{ inputs.repo }}/.github/commits" | jq -r '.[] | select(.sha=="${{ inputs.ref }}" or .sha[0:7]=="${{ inputs.ref }}" or .sha[0:8]=="${{ inputs.ref }}")')
+          sha=$(gh api "repos/${{ inputs.repo }}/commits" | jq -r '.[] | select(.sha=="${{ inputs.ref }}" or .sha[0:7]=="${{ inputs.ref }}" or .sha[0:8]=="${{ inputs.ref }}")')
           echo "sha sha: $sha"
         fi
         echo "sha: $sha"
