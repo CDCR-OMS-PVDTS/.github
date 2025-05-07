@@ -21,11 +21,17 @@ runs:
         url_ref=$(jq -rn '"${{ inputs.ref }}"|@uri')
         echo "url_ref: $url_ref"
 
+        a=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/tags/30f5146e12" | jq -r '.object.sha')
+        echo "a: $a"
+        b=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/tags/30f5146e12" | jq -r '.object.sha' || "")
+        echo "b: $b"
+        c=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/tags/30f5146e12" | jq -r '.object.sha' || "") || true
+        echo "c: $c"
 
 
 
         #sha=$(gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha')
-        sha=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/tags/$url_ref" | jq -r '.object.sha')
+        sha=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/tags/$url_ref" | jq -r '.object.sha' || "")
         echo "tag sha: $sha"
         if [[ -z "${sha}" ]]; then
           #sha=$(gh api "repos/${{ inputs.repo }}/git/refs/heads" | jq -r '.[] | select(.ref=="refs/heads/${{ inputs.ref }}") | .object.sha')
