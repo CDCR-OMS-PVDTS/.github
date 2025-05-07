@@ -25,7 +25,7 @@ runs:
         echo "ccccccccc++++++++++"
         gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/AB#23526-SetGitTag")'
         echo "ddddddddddddddddddd"
-        echo "inputs.ref: ${{ inputs.ref }}""
+        echo "inputs.ref: ${{ inputs.ref }}"
         gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}")'
         echo "eeeeeeeeeeeeeeeeeee"
         gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object'
