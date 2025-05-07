@@ -16,6 +16,20 @@ runs:
     - name: Set Tag
       shell: bash
       run: |
+        echo "aaaaaaaaaaaaaaaaaaa"
+        gh api "repos/${{ inputs.repo }}/git/refs/tags"
+        echo "bbbbbbbbbbbbbbbbbbb"
+        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[]'
+        echo "ccccccccccccccccccc"
+        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/rc.204")'
+        echo "ddddddddddddddddddd"
+        echo "inputs.ref: ${{ inputs.ref }}""
+        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}")'
+        echo "eeeeeeeeeeeeeeeeeee"
+        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object'
+        echo "fffffffffffffffffff"
+        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha'
+        echo "ggggggggggggggggggg"
         sha=(gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha')
         echo "sha: $sha"
 
