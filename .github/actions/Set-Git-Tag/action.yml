@@ -17,7 +17,6 @@ runs:
       shell: bash
       run: |
         echo "inputs.ref: ${{ inputs.ref }}"
-        echo "aaaaaaaaaaaaaaaaaaa"
         sha=$(gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha')
         echo "tag sha: $sha"
         if [[ -z "${sha}" ]]; then
@@ -25,6 +24,15 @@ runs:
           echo "branch sha: $sha"
         fi
         if [[ -z "${sha}" ]]; then
+          echo "aaaaaaaaaaaaaaaaaaa"
+          gh api "repos/${{ inputs.repo }}/.github/commits"
+          echo "bbbbbbbbbbbbbbbbbbb"
+          gh api "repos/${{ inputs.repo }}/.github/commits" | jq -r '.[]'
+          echo "ccccccccccccccccccc"
+          gh api "repos/${{ inputs.repo }}/.github/commits" | jq -r '.[] | select(.sha=="${{ inputs.ref }}")'
+          echo "ddddddddddddddddddd"
+          gh api "repos/${{ inputs.repo }}/.github/commits" | jq -r '.[] | select(.sha=="${{ inputs.ref }}" or .sha[0:7]=="${{ inputs.ref }}" or .sha[0:8]=="${{ inputs.ref }}")'
+          echo "eeeeeeeeeeeeeeeeeee"
           sha=$(gh api "repos/${{ inputs.repo }}/.github/commits" | jq -r '.[] | select(.sha=="${{ inputs.ref }}" or .sha[0:7]=="${{ inputs.ref }}" or .sha[0:8]=="${{ inputs.ref }}")')
           echo "sha sha: $sha"
         fi
