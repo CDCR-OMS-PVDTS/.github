@@ -1,0 +1,25 @@
+name: 'Set Git Tag'
+description: 'Sets a git tag in a GitHub repo.'
+inputs:
+  repo:
+    description: 'format: {owner}/{name}'
+    required: true
+  ref:
+    description: 'the ref to add the tag at'
+    required: true
+  tag:
+    description: 'The tag to create'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - id: run: |
+        sha=(gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha')
+        echo "sha: $sha"
+
+        gh api \
+          --method POST \
+          -H "Accept: application/vnd.github+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          /repos/${{ inputs.repo }}/git/refs \
+          -f "ref=refs/tags/${{ inputs.tag }}" -f "sha=$sha"
