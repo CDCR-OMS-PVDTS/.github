@@ -18,12 +18,6 @@ runs:
       run: |
         echo "inputs.ref: ${{ inputs.ref }}"
         echo "aaaaaaaaaaaaaaaaaaa"
-        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object'
-        echo "bbbbbbbbbbbbbbbbbbb"
-        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object'
-        echo "ccccccccccccccccccc"
-        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha'
-        echo "fffffffffffffffffff"
         gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha'
         echo "ggggggggggggggggggg"
         sha=(gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha')
