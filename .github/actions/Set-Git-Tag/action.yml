@@ -21,7 +21,7 @@ runs:
         echo "bbbbbbbbbbbbbbbbbbb"
         gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="")'
         echo "bbbbbbbb+++++++++++"
-        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/rc.204")'
+        gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/RunWorkflow.v.1.0.0")'
         echo "cccccccc-----------"
         gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/rc.209")'
         echo "ccccccccccccccccccc"
