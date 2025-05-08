@@ -47,7 +47,7 @@ runs:
         echo "url_tag: $url_tag"
 
         tag_sha=$(gh api "repos/${{ inputs.repo }}/git/refs/tags/$url_tag" | jq -r '.object.sha') || sha=""
-        echo "sha of tag: $sha"
+        echo "sha of tag: $tag_sha"
 
         if [[ -z "${tag_sha}" ]]; then
           echo "Adding refs/tags/${{ inputs.tag }} to $sha"
