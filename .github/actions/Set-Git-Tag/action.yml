@@ -33,16 +33,16 @@ runs:
 
 
         #sha=$(gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha')
-        sha=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/tags/$url_ref" | jq -r '.object.sha') || true
+        sha=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/tags/$url_ref" | jq -r '.object.sha') || sha=""
         echo "tag sha: $sha"
         #"$var3" == "null"
-        if [[ -z "${sha}" ]] || [["${sha}" == "null"]]; then
+        if [[ -z "${sha}" ]]; then
           #sha=$(gh api "repos/${{ inputs.repo }}/git/refs/heads" | jq -r '.[] | select(.ref=="refs/heads/${{ inputs.ref }}") | .object.sha')
-          sha=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/heads/$url_ref" | jq -r '.object.sha') || true
+          sha=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/heads/$url_ref" | jq -r '.object.sha') || sha=""
           echo "branch sha: $sha"
         fi
-        if [[ -z "${sha}" ]] || [["${sha}" == "null"]]; then
-          sha=$(gh api "repos/CDCR-OMS-PVDTS/.github/commits/$url_ref" | jq -r '.sha') || true
+        if [[ -z "${sha}" ]]; then
+          sha=$(gh api "repos/CDCR-OMS-PVDTS/.github/commits/$url_ref" | jq -r '.sha') || sha=""
           echo "sha sha: $sha"
         fi
         echo "sha: $sha"
