@@ -21,35 +21,48 @@ runs:
         url_ref=$(jq -rn '"${{ inputs.ref }}"|@uri')
         echo "url_ref: $url_ref"
 
-        # d=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/tags/30f5146e12" | jq -r '.object.sha') || true
-        # echo "d: $d"
-        # c=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/tags/30f5146e12" | jq -r '.object.sha' || "") || true
-        # echo "c: $c"
-        # b=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/tags/30f5146e12" | jq -r '.object.sha' || "")
-        # echo "b: $b"
-        # a=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/tags/30f5146e12" | jq -r '.object.sha')
-        # echo "a: $a"
+        #*************************
+        # Find the sha for the ref (including confirming it for a sha ref)
+        #*************************
+        sha=$(gh api "repos/${{ inputs.repo }}/git/refs/tags/$url_ref" | jq -r '.object.sha') || sha=""
+        echo "sha of ref as tag: $sha"
 
-
-
-        #sha=$(gh api "repos/${{ inputs.repo }}/git/refs/tags" | jq -r '.[] | select(.ref=="refs/tags/${{ inputs.ref }}") | .object.sha')
-        sha=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/tags/$url_ref" | jq -r '.object.sha') || sha=""
-        echo "tag sha: $sha"
-        #"$var3" == "null"
         if [[ -z "${sha}" ]]; then
-          #sha=$(gh api "repos/${{ inputs.repo }}/git/refs/heads" | jq -r '.[] | select(.ref=="refs/heads/${{ inputs.ref }}") | .object.sha')
-          sha=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/heads/$url_ref" | jq -r '.object.sha') || sha=""
-          echo "branch sha: $sha"
+          sha=$(gh api "repos/${{ inputs.repo }}/git/refs/heads/$url_ref" | jq -r '.object.sha') || sha=""
+          echo "sha of ref as branch: $sha"
         fi
+
         if [[ -z "${sha}" ]]; then
-          sha=$(gh api "repos/CDCR-OMS-PVDTS/.github/commits/$url_ref" | jq -r '.sha') || sha=""
-          echo "sha sha: $sha"
+          sha=$(gh api "repos/${{ inputs.repo }}/commits/$url_ref" | jq -r '.sha') || sha=""
+          echo "sha of ref as sha: $sha"
         fi
         echo "sha: $sha"
 
-        gh api \
-          --method POST \
-          -H "Accept: application/vnd.github+json" \
-          -H "X-GitHub-Api-Version: 2022-11-28" \
-          /repos/${{ inputs.repo }}/git/refs \
-          -f "ref=refs/tags/${{ inputs.tag }}" -f "sha=$sha"
+        #*************************
+        # Now add or update the tag in GitHub
+        #*************************
+        echo "inputs.tag: ${{ inputs.tag }}"
+        # urlencode the tag
+        url_tag=$(jq -rn '"${{ inputs.tag }}"|@uri')
+        echo "url_tag: $url_tag"
+
+        tag_sha=$(gh api "repos/${{ inputs.repo }}/git/refs/tags/$url_tag" | jq -r '.object.sha') || sha=""
+        echo "sha of tag: $sha"
+
+        if [[ -z "${tag_sha}" ]]; then
+          echo "Adding refs/tags/${{ inputs.tag }} to $sha"
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ inputs.repo }}/git/refs \
+            -f "ref=refs/tags/${{ inputs.tag }}" -f "sha=$sha"
+        elif [ "${tag_sha}" != "${sha}" ]; then
+          echo "Updating refs/tags/${{ inputs.tag }} from tag_sha to $sha"
+          gh api \
+            --method PATCH \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ inputs.repo }}/git/refs/REF/tags/${{ inputs.tag }} \
+            -f "sha=${sha}" -F "force=true"
+        fi
