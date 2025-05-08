@@ -58,11 +58,11 @@ runs:
             /repos/${{ inputs.repo }}/git/refs \
             -f "ref=refs/tags/${{ inputs.tag }}" -f "sha=$sha"
         elif [ "${tag_sha}" != "${sha}" ]; then
-          echo "Updating refs/tags/${{ inputs.tag }} from tag_sha to $sha"
+          echo "Updating refs/tags/${{ inputs.tag }} from $tag_sha to $sha"
           gh api \
             --method PATCH \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            /repos/${{ inputs.repo }}/git/refs/REF/tags/${{ inputs.tag }} \
+            /repos/${{ inputs.repo }}/git/refs/tags/${{ inputs.tag }} \
             -f "sha=${sha}" -F "force=true"
         fi
