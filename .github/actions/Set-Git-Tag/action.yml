@@ -36,12 +36,12 @@ runs:
         sha=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/tags/$url_ref" | jq -r '.object.sha') || true
         echo "tag sha: $sha"
         #"$var3" == "null"
-        if [[ -z "${sha}" -o "$var3" == "null"]]; then
+        if [[ -z "${sha}" ]] || ["$var3" == "null"]; then
           #sha=$(gh api "repos/${{ inputs.repo }}/git/refs/heads" | jq -r '.[] | select(.ref=="refs/heads/${{ inputs.ref }}") | .object.sha')
           sha=$(gh api "repos/CDCR-OMS-PVDTS/.github/git/refs/heads/$url_ref" | jq -r '.object.sha') || true
           echo "branch sha: $sha"
         fi
-        if [[ -z "${sha}" -o "$var3" == "null"]]; then
+        if [[ -z "${sha}" ]] || ["$var3" == "null"]; then
           sha=$(gh api "repos/CDCR-OMS-PVDTS/.github/commits/$url_ref" | jq -r '.sha') || true
           echo "sha sha: $sha"
         fi
