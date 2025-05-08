@@ -46,7 +46,7 @@ runs:
         url_tag=$(jq -rn '"${{ inputs.tag }}"|@uri')
         echo "url_tag: $url_tag"
 
-        tag_sha=$(gh api "repos/${{ inputs.repo }}/git/refs/tags/$url_tag" | jq -r '.object.sha') || sha=""
+        tag_sha=$(gh api "repos/${{ inputs.repo }}/git/refs/tags/$url_tag" | jq -r '.object.sha') || tag_sha=""
         echo "sha of tag: $tag_sha"
 
         if [[ -z "${tag_sha}" ]]; then
