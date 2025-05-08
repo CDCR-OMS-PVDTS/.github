@@ -16,7 +16,8 @@ jobs:
       continue-on-error: true
       with:
         repo: '${{ github.repository }}'
-        ref: "RunWorkflow.v.1.0.0"
+        # ref: "RunWorkflow.v.1.0.0"
+        ref: "jacob.test"
         tag: "jacob.test.tag"
     - uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Git-Tag@AB#23526-SetGitTag
       name: Set Git Tag
@@ -30,5 +31,6 @@ jobs:
       continue-on-error: true
       with:
         repo: '${{ github.repository }}'
-        ref: "8c2d4e05f98820f340cd904d76a17759ac8734db"
+        # ref: "8c2d4e05f98820f340cd904d76a17759ac8734db"
+        ref: "632821fb7d055b6b716d00dac472aae0a951a0ca"
         tag: "jacob.test.sha"
