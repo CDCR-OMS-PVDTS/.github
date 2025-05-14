@@ -19,7 +19,6 @@ runs:
         timeout_minutes: 10
         max_attempts: 3
         shell: bash
-      #   run: |
         command: |
             gh api "repos/${{ inputs.repo }}/deployments" \
             -H "Accept: application/vnd.github+json" \

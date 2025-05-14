@@ -87,17 +87,17 @@ runs:
         echo "startTime=$(date -u +%FT%TZ)" >> "$GITHUB_OUTPUT"
     - name: Run Workflow
       uses: nick-fields/retry@v3
-      timeout_minutes: 10
-      max_attempts: 3
-      shell: bash
-    #   run: |
-      command: |
-        echo gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
-        gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
-        if [[ "$?" != 0 ]]; then
-          printf "${RED}%s\n${NC}" "*** ERROR: Failed to run workflow"
-          exit 1
-        fi
+      with:
+        timeout_minutes: 10
+        max_attempts: 3
+        shell: bash
+        command: |
+          echo gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
+          gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
+          if [[ "$?" != 0 ]]; then
+            printf "${RED}%s\n${NC}" "*** ERROR: Failed to run workflow"
+            exit 1
+          fi
     - name: Await Workflow
       shell: bash
       continue-on-error: true
