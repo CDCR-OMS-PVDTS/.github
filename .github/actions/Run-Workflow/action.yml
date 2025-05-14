@@ -195,7 +195,7 @@ runs:
                 ;;
             esac
             echo ""
-            run_url=$(echo ${runData} | jq -r '.url')
+            run_url=$(echo ${runData} | jq  -c '.[0].url')
             echo "url: $run_url"
           fi
 
