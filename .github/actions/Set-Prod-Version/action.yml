@@ -15,21 +15,22 @@ runs:
   steps:
     - name: Add Deployment
       uses: nick-fields/retry@v3
-      timeout_minutes: 10
-      max_attempts: 3
-      shell: bash
-    #   run: |
-      command: |
-          gh api "repos/${{ inputs.repo }}/deployments" \
-          -H "Accept: application/vnd.github+json" \
-          -f "ref=${{ inputs.release_tag }}" \
-          -f 'payload={ 
-            "release_tag": "${{ inputs.release_tag }}", 
-            "rc_tag": "${{ inputs.rc_tag }}"
-          }' \
-          -f "environment=release" \
-          -f "description=Annother way to give info" \
-          -F "auto_merge=false" \
-          -f "required_contexts[]" \
-          -F "production_environment=true" \
-          | jq '.'
+      with:
+        timeout_minutes: 10
+        max_attempts: 3
+        shell: bash
+      #   run: |
+        command: |
+            gh api "repos/${{ inputs.repo }}/deployments" \
+            -H "Accept: application/vnd.github+json" \
+            -f "ref=${{ inputs.release_tag }}" \
+            -f 'payload={ 
+              "release_tag": "${{ inputs.release_tag }}", 
+              "rc_tag": "${{ inputs.rc_tag }}"
+            }' \
+            -f "environment=release" \
+            -f "description=Annother way to give info" \
+            -F "auto_merge=false" \
+            -f "required_contexts[]" \
+            -F "production_environment=true" \
+            | jq '.'
