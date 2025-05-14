@@ -185,7 +185,7 @@ runs:
                 ;;
               complete) 
                 if [ "${{ inputs.debug }}" = "true" ] ; then
-                  echo "running success check"
+                  echo "running complete check"
                 fi
                 isFinished=$(echo ${runData} | jq  -c \
                 --arg startTime "${{ steps.set_values.outputs.startTime }}" \
@@ -194,6 +194,9 @@ runs:
                 '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .status == "completed" and .headBranch == $ref)?] | length')
                 ;;
             esac
+            echo ""
+            run_url=$(echo ${runData} | jq -r '.url')
+            echo "url: $run_url"
           fi
 
           if [ "${{ inputs.debug }}" = "true" ] ; then
