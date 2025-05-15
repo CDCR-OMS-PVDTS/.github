@@ -86,14 +86,18 @@ runs:
         echo "startTime=$(date -u +%FT%TZ)"
         echo "startTime=$(date -u +%FT%TZ)" >> "$GITHUB_OUTPUT"
     - name: Run Workflow
-      shell: bash
-      run: |
-        echo gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
-        gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
-        if [[ "$?" != 0 ]]; then
-          printf "${RED}%s\n${NC}" "*** ERROR: Failed to run workflow"
-          exit 1
-        fi
+      uses: nick-fields/retry@v3
+      with:
+        timeout_minutes: 10
+        max_attempts: 3
+        shell: bash
+        command: |
+          echo gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
+          gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
+          if [[ "$?" != 0 ]]; then
+            printf "${RED}%s\n${NC}" "*** ERROR: Failed to run workflow"
+            exit 1
+          fi
     - name: Await Workflow
       shell: bash
       continue-on-error: true
@@ -181,7 +185,7 @@ runs:
                 ;;
               complete) 
                 if [ "${{ inputs.debug }}" = "true" ] ; then
-                  echo "running success check"
+                  echo "running complete check"
                 fi
                 isFinished=$(echo ${runData} | jq  -c \
                 --arg startTime "${{ steps.set_values.outputs.startTime }}" \
@@ -190,6 +194,8 @@ runs:
                 '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .status == "completed" and .headBranch == $ref)?] | length')
                 ;;
             esac
+            run_url=$(echo ${runData} | jq  -c '.[0].url')
+            echo "\n\nurl: $run_url"
           fi
 
           if [ "${{ inputs.debug }}" = "true" ] ; then

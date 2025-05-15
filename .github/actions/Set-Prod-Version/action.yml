@@ -14,18 +14,22 @@ runs:
   using: "composite"
   steps:
     - name: Add Deployment
-      shell: bash
-      run: |
-          gh api "repos/${{ inputs.repo }}/deployments" \
-          -H "Accept: application/vnd.github+json" \
-          -f "ref=${{ inputs.release_tag }}" \
-          -f 'payload={ 
-            "release_tag": "${{ inputs.release_tag }}", 
-            "rc_tag": "${{ inputs.rc_tag }}"
-          }' \
-          -f "environment=release" \
-          -f "description=Annother way to give info" \
-          -F "auto_merge=false" \
-          -f "required_contexts[]" \
-          -F "production_environment=true" \
-          | jq '.'
+      uses: nick-fields/retry@v3
+      with:
+        timeout_minutes: 10
+        max_attempts: 3
+        shell: bash
+        command: |
+            gh api "repos/${{ inputs.repo }}/deployments" \
+            -H "Accept: application/vnd.github+json" \
+            -f "ref=${{ inputs.release_tag }}" \
+            -f 'payload={ 
+              "release_tag": "${{ inputs.release_tag }}", 
+              "rc_tag": "${{ inputs.rc_tag }}"
+            }' \
+            -f "environment=release" \
+            -f "description=Annother way to give info" \
+            -F "auto_merge=false" \
+            -f "required_contexts[]" \
+            -F "production_environment=true" \
+            | jq '.'
