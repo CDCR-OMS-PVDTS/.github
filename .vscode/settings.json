@@ -1,0 +1,10 @@
+{
+  "sqldeveloper.format.indentation.identSpaces": 2,
+  "sqldeveloper.format.lineBreaks.onComma": "Before",
+  "sqldeveloper.format.lineBreaks.maxCharLineWidth": 80,
+  "sqldeveloper.format.general.keywordCase": "UPPER",
+  "sqldeveloper.format.general.identifierCase": "Initial Capitalization",
+  "sqldeveloper.format.alignment": {
+    "assignmentOperator": true
+  }
+}
