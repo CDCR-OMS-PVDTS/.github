@@ -1,0 +1,75 @@
+name: 'Resolve Harbor Artifact'
+description: 'Find a Harbor artifact by commit SHA or existing Harbor tag, then choose a reusable image tag.'
+inputs:
+  harbor_base_url:
+    description: 'Harbor base URL (for example: https://harbor.mt-ss.cdcr.ca.gov)'
+    required: false
+    default: 'https://harbor.mt-ss.cdcr.ca.gov'
+  harbor_project:
+    description: 'Harbor project name'
+    required: false
+    default: 'workloads'
+  harbor_repository:
+    description: 'Harbor repository name inside the project'
+    required: true
+  commit_sha:
+    description: 'Commit SHA to match against extra_attrs.config.Labels.GitInfo.commitId'
+    required: false
+  harbor_tag:
+    description: 'Harbor tag to match on artifacts when commit_sha is not provided'
+    required: false
+  registry_token:
+    description: 'Optional Harbor auth token (Bearer token or user:pass)'
+    required: false
+  ignore_tag_pattern:
+    description: 'Case-insensitive regex for tags that should never be selected'
+    required: false
+    default: '^latest$'
+  alias_tag_pattern:
+    description: 'Case-insensitive regex for dynamic alias tags that should be deprioritized'
+    required: false
+    default: '^(rc\\.|r\\.|buildall\\.)'
+outputs:
+  found_match:
+    description: 'true when a reusable artifact+tag was selected, else false'
+    value: ${{ steps.resolve.outputs.found_match }}
+  lookup_failed:
+    description: 'true when Harbor API lookup failed, else false'
+    value: ${{ steps.resolve.outputs.lookup_failed }}
+  selected_tag:
+    description: 'The selected reusable Harbor tag'
+    value: ${{ steps.resolve.outputs.selected_tag }}
+  version_number:
+    description: 'Alias of selected_tag for version-style consumers'
+    value: ${{ steps.resolve.outputs.version_number }}
+  build_sha:
+    description: 'Commit SHA read from the selected artifact metadata'
+    value: ${{ steps.resolve.outputs.build_sha }}
+  image_ref:
+    description: 'Full image reference for the selected tag'
+    value: ${{ steps.resolve.outputs.image_ref }}
+  artifact_digest:
+    description: 'Digest of the selected artifact'
+    value: ${{ steps.resolve.outputs.artifact_digest }}
+  artifact_push_time:
+    description: 'Push time of the selected artifact'
+    value: ${{ steps.resolve.outputs.artifact_push_time }}
+  matched_by:
+    description: 'Lookup strategy used (commit_sha or harbor_tag)'
+    value: ${{ steps.resolve.outputs.matched_by }}
+runs:
+  using: 'composite'
+  steps:
+    - id: resolve
+      shell: bash
+      run: |
+        bash "${{ github.action_path }}/resolve_harbor_artifact.sh"
+      env:
+        INPUT_HARBOR_BASE_URL: ${{ inputs.harbor_base_url }}
+        INPUT_HARBOR_PROJECT: ${{ inputs.harbor_project }}
+        INPUT_HARBOR_REPOSITORY: ${{ inputs.harbor_repository }}
+        INPUT_COMMIT_SHA: ${{ inputs.commit_sha }}
+        INPUT_HARBOR_TAG: ${{ inputs.harbor_tag }}
+        INPUT_REGISTRY_TOKEN: ${{ inputs.registry_token }}
+        INPUT_IGNORE_TAG_PATTERN: ${{ inputs.ignore_tag_pattern }}
+        INPUT_ALIAS_TAG_PATTERN: ${{ inputs.alias_tag_pattern }}
