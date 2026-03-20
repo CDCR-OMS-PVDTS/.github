@@ -112,6 +112,7 @@ while true; do
   if [[ "${page_count}" -eq 0 ]]; then
     break
   fi
+  echo "page_count: ${page_count}"
 
   all_artifacts=$(jq -c --argjson newPage "${page_artifacts}" '. + $newPage' <<< "${all_artifacts}")
 
@@ -130,7 +131,7 @@ fi
 
 if [[ "${match_mode}" == "commit_sha" ]]; then
   matching_artifacts=$(jq -c --arg commit "${commit_sha}" '
-    map(select((.extra_attrs.config.Labels.GitInfo.commitId // "") == $commit))
+    map(select(((.extra_attrs.config.Labels.GitInfo | fromjson? | .commitId) // "") == $commit))
   ' <<< "${all_artifacts}")
 else
   matching_artifacts=$(jq -c --arg tag "${harbor_tag}" '
@@ -181,7 +182,7 @@ if [[ -z "${selected_tag}" ]]; then
   exit 0
 fi
 
-build_sha=$(jq -r '.extra_attrs.config.Labels.GitInfo.commitId // ""' <<< "${selected_artifact}")
+build_sha=$(jq -r '(.extra_attrs.config.Labels.GitInfo | fromjson? | .commitId) // ""' <<< "${selected_artifact}")
 artifact_digest=$(jq -r '.digest // ""' <<< "${selected_artifact}")
 artifact_push_time=$(jq -r '.push_time // ""' <<< "${selected_artifact}")
 image_ref="${harbor_base_url#https://}/${harbor_project}/${harbor_repository}:${selected_tag}"
