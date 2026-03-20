@@ -90,7 +90,7 @@ lookup_failed='false'
 while true; do
   url="${harbor_base_url}/api/v2.0/projects/${project_uri}/repositories/${repo_uri}/artifacts?page=${page}&page_size=${page_size}&with_tag=true"
   echo "url:  ${url}"
-  nslookup harbor.mt-ss.cdcr.ca.gov
+  nslookup harbor.mt-ss.cdcr.ca.gov 2>/dev/null
   response_file=$(mktemp)
 
   if ! http_code=$(call_harbor_api "${url}" "${response_file}"); then
