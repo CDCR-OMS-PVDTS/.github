@@ -10,6 +10,9 @@ registry_token="${INPUT_REGISTRY_TOKEN:-}"
 ignore_tag_pattern="${INPUT_IGNORE_TAG_PATTERN:-^latest$}"
 alias_tag_pattern="${INPUT_ALIAS_TAG_PATTERN:-^(rc\\.|r\\.|buildall\\.)}"
 
+echo "commit_sha: ${commit_sha}"
+echo "harbor_tag: ${harbor_tag}"
+
 write_empty_outputs() {
   {
     echo "found_match=false"
