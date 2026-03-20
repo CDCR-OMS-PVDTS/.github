@@ -132,6 +132,8 @@ if [[ "${lookup_failed}" == "true" ]]; then
   exit 0
 fi
 
+echo "All artifact commitIds: $(jq -r '[.[].extra_attrs.config.Labels.GitInfo | fromjson? | .commitId // ""] | join(", ")' <<< "${all_artifacts}")"
+
 if [[ "${match_mode}" == "commit_sha" ]]; then
   matching_artifacts=$(jq -c --arg commit "${commit_sha}" '
     map(select(((.extra_attrs.config.Labels.GitInfo | fromjson? | .commitId) // "") == $commit))
