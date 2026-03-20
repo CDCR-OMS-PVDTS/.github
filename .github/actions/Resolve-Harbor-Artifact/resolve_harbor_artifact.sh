@@ -106,6 +106,8 @@ while true; do
   page_artifacts=$(cat "${response_file}")
   rm -f "${response_file}"
 
+  echo "page_artifacts: ${page_artifacts}"
+  echo "***** before count"
   page_count=$(jq 'length' <<< "${page_artifacts}")
   if [[ "${page_count}" -eq 0 ]]; then
     break
