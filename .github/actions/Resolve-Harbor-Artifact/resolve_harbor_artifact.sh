@@ -85,6 +85,20 @@ call_harbor_api() {
   return 1
 }
 
+jq_git_commit_id_def='
+  def git_commit_id:
+    .extra_attrs.config.Labels.GitInfo? as $gitinfo
+    | if ($gitinfo | type) != "string" then
+        ""
+      else
+        (
+          ($gitinfo | fromjson? | .commitId)
+          // (($gitinfo | try capture("commitId:[[:space:]]*'"'"'(?<commitId>[^'"'"']*)'"'"'") catch {}) | .commitId)
+          // ""
+        )
+      end;
+'
+
 page=1
 page_size=100
 all_artifacts='[]'
@@ -132,12 +146,12 @@ if [[ "${lookup_failed}" == "true" ]]; then
   exit 0
 fi
 
-echo "All artifact commitIds: $(jq -r '[.[].extra_attrs.config.Labels.GitInfo | fromjson? | .commitId // ""] | join(", ")' <<< "${all_artifacts}")"
+echo "All artifact commitIds: $(jq -r "${jq_git_commit_id_def} [ .[] | git_commit_id ] | join(\", \")" <<< "${all_artifacts}")"
 
 if [[ "${match_mode}" == "commit_sha" ]]; then
-  matching_artifacts=$(jq -c --arg commit "${commit_sha}" '
-    map(select(((.extra_attrs.config.Labels.GitInfo | fromjson? | .commitId) // "") == $commit))
-  ' <<< "${all_artifacts}")
+  matching_artifacts=$(jq -c --arg commit "${commit_sha}" "${jq_git_commit_id_def}
+    map(select(git_commit_id == \$commit))
+  " <<< "${all_artifacts}")
 else
   matching_artifacts=$(jq -c --arg tag "${harbor_tag}" '
     map(select(any((.tags // [])[]?; (.name // "") == $tag)))
@@ -187,7 +201,7 @@ if [[ -z "${selected_tag}" ]]; then
   exit 0
 fi
 
-build_sha=$(jq -r '(.extra_attrs.config.Labels.GitInfo | fromjson? | .commitId) // ""' <<< "${selected_artifact}")
+build_sha=$(jq -r "${jq_git_commit_id_def} git_commit_id" <<< "${selected_artifact}")
 artifact_digest=$(jq -r '.digest // ""' <<< "${selected_artifact}")
 artifact_push_time=$(jq -r '.push_time // ""' <<< "${selected_artifact}")
 image_ref="${harbor_base_url#https://}/${harbor_project}/${harbor_repository}:${selected_tag}"
