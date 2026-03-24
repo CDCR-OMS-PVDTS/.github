@@ -69,7 +69,6 @@ call_harbor_api() {
   fi
 
   if [[ ${#auth_args[@]} -gt 0 ]]; then
-    rc=0
     http_code=$(curl -sS -k -o "${response_file}" -w "%{http_code}" "${auth_args[@]}" "${url}") || rc=$?
     if [[ $rc -ne 0 ]]; then
       echo "000"
@@ -83,7 +82,6 @@ call_harbor_api() {
     if [[ "${registry_token}" == *:* ]]; then
       local basic_auth
       basic_auth=$(printf "%s" "${registry_token}" | base64 | tr -d '\n')
-      rc=0
       http_code=$(curl -sS -k -o "${response_file}" -w "%{http_code}" -H "Authorization: Basic ${basic_auth}" "${url}") || rc=$?
       if [[ $rc -ne 0 ]]; then
         echo "000"
