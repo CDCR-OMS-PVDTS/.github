@@ -56,15 +56,25 @@ call_harbor_api() {
   local url="$1"
   local response_file="$2"
   local http_code
+  local rc=0
 
-  http_code=$(curl -sS -k -o "${response_file}" -w "%{http_code}" "${url}")
+  http_code=$(curl -sS -k -o "${response_file}" -w "%{http_code}" "${url}") || rc=$?
+  if [[ $rc -ne 0 ]]; then
+    echo "000"
+    return 1
+  fi
   if [[ "${http_code}" == "200" ]]; then
     echo "${http_code}"
     return 0
   fi
 
   if [[ ${#auth_args[@]} -gt 0 ]]; then
-    http_code=$(curl -sS -k -o "${response_file}" -w "%{http_code}" "${auth_args[@]}" "${url}")
+    rc=0
+    http_code=$(curl -sS -k -o "${response_file}" -w "%{http_code}" "${auth_args[@]}" "${url}") || rc=$?
+    if [[ $rc -ne 0 ]]; then
+      echo "000"
+      return 1
+    fi
     if [[ "${http_code}" == "200" ]]; then
       echo "${http_code}"
       return 0
@@ -73,7 +83,12 @@ call_harbor_api() {
     if [[ "${registry_token}" == *:* ]]; then
       local basic_auth
       basic_auth=$(printf "%s" "${registry_token}" | base64 | tr -d '\n')
-      http_code=$(curl -sS -k -o "${response_file}" -w "%{http_code}" -H "Authorization: Basic ${basic_auth}" "${url}")
+      rc=0
+      http_code=$(curl -sS -k -o "${response_file}" -w "%{http_code}" -H "Authorization: Basic ${basic_auth}" "${url}") || rc=$?
+      if [[ $rc -ne 0 ]]; then
+        echo "000"
+        return 1
+      fi
       if [[ "${http_code}" == "200" ]]; then
         echo "${http_code}"
         return 0
