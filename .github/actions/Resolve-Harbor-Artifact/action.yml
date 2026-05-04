@@ -13,7 +13,7 @@ inputs:
     description: 'Harbor repository name inside the project'
     required: true
   commit_sha:
-    description: 'Commit SHA to match against extra_attrs.config.Labels.GitInfo.commitId'
+    description: 'Commit SHA to match against extra_attrs.config.Labels.GitInfo.commitId or extra_attrs.config.Labels.org.opencontainers.image.revision'
     required: false
   harbor_tag:
     description: 'Harbor tag to match on artifacts when commit_sha is not provided'
@@ -43,7 +43,7 @@ outputs:
     description: 'Alias of selected_tag for version-style consumers'
     value: ${{ steps.resolve.outputs.version_number }}
   build_sha:
-    description: 'Commit SHA read from the selected artifact metadata'
+    description: 'Commit SHA read from selected artifact metadata (GitInfo.commitId or org.opencontainers.image.revision)'
     value: ${{ steps.resolve.outputs.build_sha }}
   image_ref:
     description: 'Full image reference for the selected tag'
