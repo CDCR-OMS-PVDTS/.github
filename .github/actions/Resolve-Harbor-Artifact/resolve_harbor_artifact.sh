@@ -99,7 +99,7 @@ call_harbor_api() {
 }
 
 jq_git_commit_id_def='
-  def git_commit_id:
+  def gitinfo_commit_id:
     .extra_attrs.config.Labels.GitInfo? as $gitinfo
     | if ($gitinfo | type) != "string" then
         ""
@@ -110,6 +110,14 @@ jq_git_commit_id_def='
           // ""
         )
       end;
+
+  def oci_revision:
+    .extra_attrs.config.Labels."org.opencontainers.image.revision"? as $revision
+    | if ($revision | type) == "string" then $revision else "" end;
+
+  def git_commit_id:
+    (gitinfo_commit_id) as $from_gitinfo
+    | if $from_gitinfo != "" then $from_gitinfo else oci_revision end;
 '
 
 page=1
@@ -153,7 +161,7 @@ if [[ "${lookup_failed}" == "true" ]]; then
   exit 0
 fi
 
-echo "All artifact commitIds: $(jq -r "${jq_git_commit_id_def} [ .[] | git_commit_id ] | join(\", \")" <<< "${all_artifacts}")"
+echo "All artifact commit SHAs: $(jq -r "${jq_git_commit_id_def} [ .[] | git_commit_id ] | join(\", \")" <<< "${all_artifacts}")"
 
 if [[ "${match_mode}" == "commit_sha" ]]; then
   matching_artifacts=$(jq -c --arg commit "${commit_sha}" "${jq_git_commit_id_def}
