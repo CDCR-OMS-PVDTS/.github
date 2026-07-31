@@ -59,10 +59,12 @@ runs:
                 url="$url?${queryString}"
             fi
 
+            echo "URL: $url"
+
             # get the page of 30 deployments (default page size for GitHub API)
             # if searching by ID then ignore the other parameters except repo and
             # wrap it in an array to maintain consistent structure
-            deployments_raw=$(gh api "$url?${queryString}" \
+            deployments_raw=$(gh api "$url" \
             | jq 'if type == "object" then [.] else . end' \
             )
             echo "$deployments_raw"
