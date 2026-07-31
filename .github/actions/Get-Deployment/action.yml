@@ -67,7 +67,6 @@ runs:
             deployments_raw=$(gh api "$url" \
             | jq 'if type == "object" then [.] else . end' \
             )
-            echo "$deployments_raw"
 
             # Iterate through each object in the array
             # -c ensures each object is compact (one line) for safe iteration
@@ -92,16 +91,7 @@ runs:
             id=$(echo "$deployment" | jq -r '.id')
             url=$(echo "$deployment" | jq -r '.url')
 
-            echo "******************************************************"
-            echo "Deployments with statuses:"
-            echo -e "$deployments_with_statuses\n"
-            echo "*******"
-            echo "Filtered deployments:"
-            echo -e "$deployments\n"
-            echo "*******"
-            echo "Selected deployment:"
-            echo "$deployment"
-            echo "******************************************************"
+            echo "$deployment" | jq '.'
             
             echo "Deployment=${deployment}" >> $GITHUB_OUTPUT
             echo "Deployment_URL=${url}" >> $GITHUB_OUTPUT
