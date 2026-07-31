@@ -51,7 +51,7 @@ runs:
           -H "Accept: application/vnd.github+json" \
           -f "state=${{ inputs.state }}" \
           -f "description=${{ inputs.description }}" \
-          | jq '.' \
+          | jq -c '.' \
           )
           echo "d"
           echo "status:"
