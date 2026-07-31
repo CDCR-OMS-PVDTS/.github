@@ -88,7 +88,7 @@ runs:
                 deployments="$deployments_with_statuses"
             fi
 
-            deployment=$(echo "$deployments" | jq '.[0]')
+            deployment=$(echo "$deployments" | jq -c '.[0]')
             id=$(echo "$deployment" | jq -r '.id')
             url=$(echo "$deployment" | jq -r '.url')
 
