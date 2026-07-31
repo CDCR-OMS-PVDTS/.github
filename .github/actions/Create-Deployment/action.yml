@@ -84,13 +84,14 @@ runs:
             -F "auto_merge=false" \
             -f "required_contexts[]" \
             -F "production_environment=true" \
-            | jq '.' \
+            | jq -c'.' \
             )
             id=$(echo "$deployment" | jq -r '.id')
             url=$(echo "$deployment" | jq -r '.url')
             statuses_url=$(echo "$deployment" | jq -r '.statuses_url')
             
-            echo -e "Deployment:\n${deployment}"
+            echo -e "Deployment:\n$(echo "$deployment" | jq '.')"
+            echo -e "Deployment (compact):\n${deployment}"
             echo "id: ${id}"
             echo "url: ${url}"
             echo "statuses_url: ${statuses_url}"
@@ -99,9 +100,10 @@ runs:
             echo "Deployment_STATUSES_URL=${statuses_url}" >> $GITHUB_ENV
             echo "Deployment_ID=${id}" >> $GITHUB_ENV
     - name: Checkout Local Repository 
+      if: ${{ success() }}
       uses: actions/checkout@v4
     - name: Add Status
-      if: ${{ !cancelled() && inputs.initial_state != '' }}
+      if: ${{ success() && inputs.initial_state != '' }}
       uses: ./.github/actions/Set-Deployment-Status
       with:
         repo: ${{ inputs.repo }}
