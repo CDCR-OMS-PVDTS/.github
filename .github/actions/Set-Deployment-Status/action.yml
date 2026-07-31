@@ -45,7 +45,6 @@ runs:
           echo "description: ${{ inputs.description }}"
           echo "url: repos/${{ inputs.repo }}/deployments/${{ inputs.deployment_id }}/statuses"
 
-          echo "a"
           status=$(
           gh api "repos/${{ inputs.repo }}/deployments/${{ inputs.deployment_id }}/statuses" \
           -H "Accept: application/vnd.github+json" \
@@ -53,9 +52,8 @@ runs:
           -f "description=${{ inputs.description }}" \
           | jq -c '.' \
           )
-          echo "d"
+          
           echo "status:"
           echo "$status" | jq '.'
-          echo "e"
+          
           echo "Status=${status}" >> $GITHUB_ENV
-          echo "f"
