@@ -89,15 +89,15 @@ runs:
             -F "production_environment=true" \
             | jq -c '.' \
             )
-            echo "Deployment- (original -c):"
-            echo "$deployment"
-            echo -e "Deployment1:\n$(echo "$deployment" | jq '.')"
-            echo "Deployment2 (-c):"
-            echo "$deployment" | jq -c '.'
-            echo "Deployment3 (-r):"
-            echo "$deployment" | jq -r '.'
-            echo "Deployment4 (--compact-output):"
-            echo "$deployment" | jq --compact-output '.'
+            # echo "Deployment- (original -c):"
+            # echo "$deployment"
+            # echo -e "Deployment1:\n$(echo "$deployment" | jq '.')"
+            # echo "Deployment2 (-c):"
+            # echo "$deployment" | jq -c '.'
+            # echo "Deployment3 (-r):"
+            # echo "$deployment" | jq -r '.'
+            # echo "Deployment4 (--compact-output):"
+            # echo "$deployment" | jq --compact-output '.'
 
 
 
