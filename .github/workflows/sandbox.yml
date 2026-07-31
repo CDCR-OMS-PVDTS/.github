@@ -30,19 +30,19 @@ jobs:
         uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Deployment-Status@29474-DeploymentActions
         with:
           repo: ${{ github.repository }}
-          id: ${{ steps.create.outputs.id }}
+          deployment_id: ${{ steps.create.outputs.Deployment_ID }}
           state: in_progress
           description: 'Setting deployment to in-progress'
       - name: Get Deployment by ID
         uses: CDCR-OMS-PVDTS/.github/.github/actions/Get-Deployment@29474-DeploymentActions
         with:
           repo: ${{ github.repository }}
-          id: ${{ steps.create.outputs.id }}
+          id: ${{ steps.create.outputs.Deployment_ID }}
       - name: Set Success
         uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Deployment-Status@29474-DeploymentActions
         with:
           repo: ${{ github.repository }}
-          id: ${{ steps.create.outputs.id }}
+          deployment_id: ${{ steps.create.outputs.Deployment_ID }}
           state: success
           description: 'Setting deployment to success'
       - name: Get Deployment by environment
@@ -55,4 +55,4 @@ jobs:
         with:
           repo: ${{ github.repository }}
           environment: sandbox
-          state: success
+          status: success
