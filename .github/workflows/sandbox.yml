@@ -23,7 +23,7 @@ jobs:
           environment: sandbox
           description: 'My deployment description'
           workflow: ${{ github.workflow }}
-          workflow_details: ${{ toJson(github) }}
+          workflow_details: "run_id: ${{ github.run_id }}, run_number: ${{ github.run_number }}, run_attempt: ${{ github.run_attempt }}, job: ${{ github.job }}"
           workflow_url: ${{ github.workflow_ref }}
           initial_state: pending
       - name: Set In Progress
