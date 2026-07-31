@@ -87,7 +87,7 @@ runs:
             -F "auto_merge=false" \
             -f "required_contexts[]" \
             -F "production_environment=true" \
-            | jq '.' \
+            | jq -c '.' \
             )
             echo -e "Deployment1:\n$(echo "$deployment" | jq '.')"
             echo "Deployment2 (-c):"
