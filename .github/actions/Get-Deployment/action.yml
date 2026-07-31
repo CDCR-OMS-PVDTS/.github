@@ -23,16 +23,16 @@ inputs:
 outputs:
   Deployment_ID:
     description: 'The ID of the selected deployment'
-    value: ${{ env.Deployment_ID }}
+    value: ${{ steps.get-deployment.outputs.Deployment_ID }}
   Deployment_URL:
     description: 'The URL of the selected deployment'
-    value: ${{ env.Deployment_URL }}
+    value: ${{ steps.get-deployment.outputs.Deployment_URL }}
   Deployment:
     description: 'The full deployment object of the selected deployment, augmented with its statuses'
-    value: ${{ env.Deployment }}
+    value: ${{ steps.get-deployment.outputs.Deployment }}
   Deployments:
     description: 'The full list of deployments retrieved'
-    value: ${{ env.Deployments }}
+    value: ${{ steps.get-deployment.outputs.Deployments }}
 runs:
   using: "composite"
   steps:
@@ -44,16 +44,16 @@ runs:
         max_attempts: 3
         shell: bash
         command: |
-            url="repos/$repo/deployments"
-            if [ -n "$id" ]; then
-                url="$url/$id"
+            url="repos/${{ inputs.repo }}/deployments"
+            if [ -n "${{ inputs.id }}" ]; then
+                url="$url/${{ inputs.id }}"
             else
               queryArray=()
-              if [ -n "$ref" ]; then
-                  queryArray+=("ref=$ref")
+              if [ -n "${{ inputs.ref }}" ]; then
+                  queryArray+=("ref=${{ inputs.ref }}")
               fi
-              if [ -n "$environment" ]; then
-                  queryArray+=("environment=$environment")
+              if [ -n "${{ inputs.environment }}" ]; then
+                  queryArray+=("environment=${{ inputs.environment }}")
               fi
               queryString=$(IFS="&"; echo "${queryArray[*]}")
                 url="$url?${queryString}"
@@ -82,8 +82,8 @@ runs:
             done | jq -s '.')  # -s collects modified objects back into an array in deployments_with_statuses
 
             # Filter deployments by status if specified and not searching by ID
-            if [[ -n "$status" && -z "$id" ]]; then
-                deployments=$(echo "$deployments_with_statuses" | jq "[.[] | select(.state == \"$status\")]")
+            if [[ -n "${{ inputs.status }}" && -z "${{ inputs.id }}" ]]; then
+                deployments=$(echo "$deployments_with_statuses" | jq "[.[] | select(.state == \"${{ inputs.status }}\")]")
             else
                 deployments="$deployments_with_statuses"
             fi
@@ -103,7 +103,7 @@ runs:
             id=$(echo "$deployment" | jq -r '.id')
             url=$(echo "$deployment" | jq -r '.url')
             
-            echo "Deployment=${deployment}" >> $GITHUB_ENV
-            echo "Deployment_URL=${url}" >> $GITHUB_ENV
-            echo "Deployment_ID=${id}" >> $GITHUB_ENV
-            echo "Deployments=${deployments}" >> $GITHUB_ENV
+            echo "Deployment=${deployment}" >> $GITHUB_OUTPUT
+            echo "Deployment_URL=${url}" >> $GITHUB_OUTPUT
+            echo "Deployment_ID=${id}" >> $GITHUB_OUTPUT
+            echo "Deployments=${deployments}" >> $GITHUB_OUTPUT
