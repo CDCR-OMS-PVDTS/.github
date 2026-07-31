@@ -46,17 +46,16 @@ runs:
           echo "url: repos/${{ inputs.repo }}/deployments/${{ inputs.deployment_id }}/statuses"
 
           echo "a"
-          # status=$(
-          echo "b"
+          status=$(
           gh api "repos/${{ inputs.repo }}/deployments/${{ inputs.deployment_id }}/statuses" \
           -H "Accept: application/vnd.github+json" \
           -f "state=${{ inputs.state }}" \
           -f "description=${{ inputs.description }}" \
-          | jq '.' 
-          echo "c"
-          # )
+          | jq '.' \
+          )
           echo "d"
-          echo -e "status:\n$(echo ""$status""" | jq '.')"
+          echo "status:"
+          echo "$status" | jq '.'
           echo "e"
           echo "Status=${status}" >> $GITHUB_ENV
           echo "f"
