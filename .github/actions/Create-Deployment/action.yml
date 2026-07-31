@@ -68,7 +68,7 @@ runs:
         max_attempts: 3
         shell: bash
         command: |
-            deployment = $(gh api "repos/${{ inputs.repo }}/deployments" \
+            deployment=$(gh api "repos/${{ inputs.repo }}/deployments" \
             -H "Accept: application/vnd.github+json" \
             -f "ref=${{ inputs.ref }}" \
             -f 'payload={ 

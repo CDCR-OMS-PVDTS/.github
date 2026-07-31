@@ -64,8 +64,8 @@ runs:
             # wrap it in an array to maintain consistent structure
             deployments_raw=$(gh api "$url?${queryString}" \
             | jq 'if type == "object" then [.] else . end' \
-            | tee /dev/tty \
             )
+            echo "$deployments_raw"
 
             # Iterate through each object in the array
             # -c ensures each object is compact (one line) for safe iteration
