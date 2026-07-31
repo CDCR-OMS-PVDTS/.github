@@ -60,14 +60,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Check jq version and location
-      shell: bash
-      run: |
-        # Print the version string
-        jq --version
-        
-        # Print the exact binary path being used
-        which jq
     - name: Add Deployment
       id: add-deployment
       uses: nick-fields/retry@v4
@@ -79,8 +71,6 @@ runs:
             # Print the version string
             jq --version
             
-            # Print the exact binary path being used
-            which jq
             deployment=$(gh api "repos/${{ inputs.repo }}/deployments" \
             -H "Accept: application/vnd.github+json" \
             -f "ref=${{ inputs.ref }}" \
@@ -97,8 +87,19 @@ runs:
             -F "auto_merge=false" \
             -f "required_contexts[]" \
             -F "production_environment=true" \
-            | jq --compact-output'.' \
+            | jq '.' \
             )
+            echo -e "Deployment1:\n$(echo "$deployment" | jq '.')"
+            echo "Deployment2 (-c):"
+            echo "$deployment" | jq -c '.'
+            echo "Deployment3 (-r):"
+            echo "$deployment" | jq -r '.'
+            echo "Deployment4 (--compact-output):"
+            echo "$deployment" | jq --compact-output '.'
+
+
+
+
             id=$(echo "$deployment" | jq -r '.id')
             url=$(echo "$deployment" | jq -r '.url')
             statuses_url=$(echo "$deployment" | jq -r '.statuses_url')
