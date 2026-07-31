@@ -49,8 +49,8 @@ runs:
           gh api "repos/${{ inputs.repo }}/deployments/${{ inputs.deployment_id }}/statuses" \
           -H "Accept: application/vnd.github+json" \
           -f "state=${{ inputs.state }}" \
-          -f "description=${{ inputs.description }}" 
-          # | jq -c '.' \
+          -f "description=${{ inputs.description }}" \
+          | jq '.' 
           # )
           echo -e "status:\n$(echo ""$status""" | jq '.')"
           echo "Status=${status}" >> $GITHUB_ENV
