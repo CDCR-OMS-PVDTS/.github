@@ -44,19 +44,19 @@ inputs:
 outputs:
   Deployment_ID:
     description: 'The ID of the created deployment'
-    value: ${{ env.Deployment_ID }}
+    value: ${{ steps.add-deployment.outputs.Deployment_ID }}
   Deployment_URL:
     description: 'The URL of the created deployment'
-    value: ${{ env.Deployment_URL }}
+    value: ${{ steps.add-deployment.outputs.Deployment_URL }}
   Deployment_STATUSES_URL:
     description: 'The statuses URL of the created deployment'
-    value: ${{ env.Deployment_STATUSES_URL }}
+    value: ${{ steps.add-deployment.outputs.Deployment_STATUSES_URL }}
   Deployment:
     description: 'The full deployment object of the created deployment'
-    value: ${{ env.Deployment }}
+    value: ${{ steps.add-deployment.outputs.Deployment }}
   Deployment_Status:
     description: 'The status of the created deployment'
-    value: ${{ env.Deployment_Status }}
+    value: ${{ steps.add-deployment.outputs.Deployment_Status }}
 runs:
   using: "composite"
   steps:
@@ -108,19 +108,19 @@ runs:
             
             echo -e "Deployment:\n$(echo "$deployment" | jq '.')"
             echo -e "Deployment (compact):\n${deployment}"
+
             echo "id: ${id}"
             echo "url: ${url}"
             echo "statuses_url: ${statuses_url}"
-            echo "Deployment=${deployment}" >> $GITHUB_ENV
-            echo "Deployment_URL=${url}" >> $GITHUB_ENV
-            echo "Deployment_STATUSES_URL=${statuses_url}" >> $GITHUB_ENV
-            echo "Deployment_ID=${id}" >> $GITHUB_ENV
+            echo "Deployment=${deployment}" >> $GITHUB_OUTPUT
+            echo "Deployment_URL=${url}" >> $GITHUB_OUTPUT
+            echo "Deployment_STATUSES_URL=${statuses_url}" >> $GITHUB_OUTPUT
+            echo "Deployment_ID=${id}" >> $GITHUB_OUTPUT
     - name: Add Status
       if: ${{ success() && inputs.initial_state != '' }}
       uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Deployment-Status@29474-DeploymentActions
-      # uses: ./.github/actions/Set-Deployment-Status
       with:
         repo: ${{ inputs.repo }}
-        deployment_id: ${{ env.Deployment_ID }}
+        deployment_id: ${{ steps.add-deployment.outputs.Deployment_ID }}
         state: ${{ inputs.initial_state }}
         description: "Initial deployment status"
