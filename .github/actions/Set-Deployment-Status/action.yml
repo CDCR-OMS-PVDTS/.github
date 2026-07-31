@@ -43,7 +43,7 @@ runs:
             -H "Accept: application/vnd.github+json" \
             -f "state=${{ inputs.state }}" \
             -f "description=${{ inputs.description }}" \
-            | jq '.' \
-            | tee /dev/tty \
+            | jq -c '.' \
             )
+            echo -e "status:\n$(echo ""$status""" | jq '.')"
             echo "Status=${status}" >> $GITHUB_ENV

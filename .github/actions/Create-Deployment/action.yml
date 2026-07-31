@@ -85,12 +85,15 @@ runs:
             -f "required_contexts[]" \
             -F "production_environment=true" \
             | jq '.' \
-            | tee /dev/tty \
             )
             id=$(echo "$deployment" | jq -r '.id')
             url=$(echo "$deployment" | jq -r '.url')
             statuses_url=$(echo "$deployment" | jq -r '.statuses_url')
             
+            echo -e "Deployment:\n${deployment}"
+            echo "id: ${id}"
+            echo "url: ${url}"
+            echo "statuses_url: ${statuses_url}"
             echo "Deployment=${deployment}" >> $GITHUB_ENV
             echo "Deployment_URL=${url}" >> $GITHUB_ENV
             echo "Deployment_STATUSES_URL=${statuses_url}" >> $GITHUB_ENV
