@@ -84,7 +84,7 @@ runs:
             -F "auto_merge=false" \
             -f "required_contexts[]" \
             -F "production_environment=true" \
-            | jq -c'.' \
+            | jq --compact-output'.' \
             )
             id=$(echo "$deployment" | jq -r '.id')
             url=$(echo "$deployment" | jq -r '.url')
