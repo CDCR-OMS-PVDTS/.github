@@ -13,11 +13,9 @@ jobs:
   do-something:
     runs-on: ubuntu-latest
     steps: # a workflow must have a step, if false makes it not actually run
-      - name: checkout
-        uses: actions/checkout@v6
       - name: Create Deployment
         id: create
-        uses: ./.github/actions/Create-Deployment
+        uses: CDCR-OMS-PVDTS/.github/.github/actions/Create-Deployment@29474-DeploymentActions
         with:
           repo: ${{ github.repository }}
           ref: jacob.test
@@ -29,31 +27,31 @@ jobs:
           workflow_url: ${{ github.workflow_ref }}
           initial_state: pending
       - name: Set In Progress
-        uses: ./.github/actions/Set-Deployment-Status
+        uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Deployment-Status@29474-DeploymentActions
         with:
           repo: ${{ github.repository }}
           id: ${{ steps.create.outputs.id }}
           state: in_progress
           description: 'Setting deployment to in-progress'
       - name: Get Deployment by ID
-        uses: ./.github/actions/Get-Deployment
+        uses: CDCR-OMS-PVDTS/.github/.github/actions/Get-Deployment@29474-DeploymentActions
         with:
           repo: ${{ github.repository }}
           id: ${{ steps.create.outputs.id }}
       - name: Set Success
-        uses: ./.github/actions/Set-Deployment-Status
+        uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Deployment-Status@29474-DeploymentActions
         with:
           repo: ${{ github.repository }}
           id: ${{ steps.create.outputs.id }}
           state: success
           description: 'Setting deployment to success'
       - name: Get Deployment by environment
-        uses: ./.github/actions/Get-Deployment
+        uses: CDCR-OMS-PVDTS/.github/.github/actions/Get-Deployment@29474-DeploymentActions
         with:
           repo: ${{ github.repository }}
           environment: sandbox
       - name: Get Deployment by environment and success
-        uses: ./.github/actions/Get-Deployment
+        uses: CDCR-OMS-PVDTS/.github/.github/actions/Get-Deployment@29474-DeploymentActions
         with:
           repo: ${{ github.repository }}
           environment: sandbox
