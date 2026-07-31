@@ -30,9 +30,17 @@ inputs:
     required: false
     default: ''
   initial_state:
-    description: 'The initial state of the deployment (error, failure, inactive, in_progress, queued, pending, success)'
-    required: false
-    default: ''
+    description: 'The initial state of the deployment'
+    type: option
+    options:
+      - error
+      - failure
+      - inactive
+      - in_progress
+      - queued
+      - pending
+      - success
+    required: true
 outputs:
   Deployment_ID:
     description: 'The ID of the created deployment'
@@ -87,18 +95,13 @@ runs:
             echo "Deployment_URL=${url}" >> $GITHUB_ENV
             echo "Deployment_STATUSES_URL=${statuses_url}" >> $GITHUB_ENV
             echo "Deployment_ID=${id}" >> $GITHUB_ENV
+    - name: Checkout Local Repository 
+      uses: actions/checkout@v4
     - name: Add Status
       if: ${{ !cancelled() && inputs.initial_state != '' }}
-      uses: nick-fields/retry@v4
+      uses: ./.github/actions/Set-Deployment-Status
       with:
-        timeout_minutes: 10
-        max_attempts: 3
-        shell: bash
-        command: |
-            status=$(gh api "repos/${{ inputs.repo }}/deployments/${{ env.Deployment_ID }}/statuses" \
-            -H "Accept: application/vnd.github+json" \
-            -f "state=${{ inputs.initial_state }}" \
-            | jq '.' \
-            | tee /dev/tty \
-            )
-            echo "Deployment_Status=${status}" >> $GITHUB_ENV
+        repo: ${{ inputs.repo }}
+        deployment_id: ${{ env.Deployment_ID }}
+        state: ${{ inputs.initial_state }}
+        description: "Initial deployment status"

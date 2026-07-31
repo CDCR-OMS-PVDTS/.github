@@ -1,0 +1,49 @@
+name: 'Set Deployment Status'
+description: 'Adds a status to a Deployment in GitHub.'
+inputs:
+  repo:
+    description: 'format: {owner}/{name}'
+    required: true
+  deployment_id:
+    description: 'The ID of the deployment to add the status to'
+    required: true
+  state:
+    description: 'The state to add to the deployment'
+    type: option
+    # for an explanation of these states, see DEPLOYMENT_STATUSES.md in this repo
+    options:
+      - error
+      - failure
+      - inactive
+      - in_progress
+      - queued
+      - pending
+      - success
+    required: true
+  description:
+    description: 'The description of the deployment status'
+    required: false
+    default: ''
+outputs:
+  Status:
+    description: 'The status of the created deployment'
+    value: ${{ env.Deployment_Status }}
+runs:
+  using: "composite"
+  steps:
+    - name: Add Status
+      id: add-status
+      uses: nick-fields/retry@v4
+      with:
+        timeout_minutes: 10
+        max_attempts: 3
+        shell: bash
+        command: |
+            status=$(gh api "repos/${{ inputs.repo }}/deployments/${{ inputs.deployment_id }}/statuses" \
+            -H "Accept: application/vnd.github+json" \
+            -f "state=${{ inputs.state }}" \
+            -f "description=${{ inputs.description }}" \
+            | jq '.' \
+            | tee /dev/tty \
+            )
+            echo "Status=${status}" >> $GITHUB_ENV

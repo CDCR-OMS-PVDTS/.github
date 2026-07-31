@@ -1,0 +1,107 @@
+name: 'Get Deployment'
+description: 'Gets a Deployment in GitHub.'
+inputs:
+  repo:
+    description: 'format: {owner}/{name}'
+    required: true
+  id:
+    description: 'The ID of the deployment to retrieve'
+    required: false
+    default: ''
+  ref:
+    description: 'The git reference for the deployment (tag, branch, commit SHA)'
+    required: false
+    default: ''
+  environment:
+    description: 'The environment for the deployment (e.g., production, staging)'
+    required: false
+    default: ''
+  status:
+    description: 'The status of the deployment (error, failure, inactive, in_progress, queued, pending, success)'
+    required: false
+    default: ''
+outputs:
+  Deployment_ID:
+    description: 'The ID of the selected deployment'
+    value: ${{ env.Deployment_ID }}
+  Deployment_URL:
+    description: 'The URL of the selected deployment'
+    value: ${{ env.Deployment_URL }}
+  Deployment:
+    description: 'The full deployment object of the selected deployment, augmented with its statuses'
+    value: ${{ env.Deployment }}
+  Deployments:
+    description: 'The full list of deployments retrieved'
+    value: ${{ env.Deployments }}
+runs:
+  using: "composite"
+  steps:
+    - name: Get Deployment
+      id: get-deployment
+      uses: nick-fields/retry@v4
+      with:
+        timeout_minutes: 10
+        max_attempts: 3
+        shell: bash
+        command: |
+            url="repos/$repo/deployments"
+            if [ -n "$id" ]; then
+                url="$url/$id"
+            else
+              queryArray = []
+              if [ -n "$ref" ]; then
+                  queryArray+=("ref=$ref")
+              fi
+              if [ -n "$environment" ]; then
+                  queryArray+=("environment=$environment")
+              fi
+              queryString=$(IFS="&"; echo "${queryArray[*]}")
+                url="$url?${queryString}"
+            fi
+
+            # get the page of 30 deployments (default page size for GitHub API)
+            # if searching by ID then ignore the other parameters except repo and
+            # wrap it in an array to maintain consistent structure
+            deployments_raw=$(gh api "$url?${queryString}" \
+            | jq 'if type == "object" then [.] else . end' \
+            | tee /dev/tty \
+            )
+
+            # Iterate through each object in the array
+            # -c ensures each object is compact (one line) for safe iteration
+            deployments_with_statuses=$(echo "$deployments_raw" | jq -c '.[]' | while IFS= read -r obj; do
+                # Extract fields from each object
+                statuses_url=$(jq -r '.statuses_url' <<< "$obj")
+                statuses=$(gh api "$statuses_url" | jq '.')
+                state=$(jq -r '.[0].state' <<< "$statuses")
+
+                # Add the statuses and state to the deployment object
+                echo "$obj" | jq ".statuses = $statuses | .state = \"$state\""
+            done | jq -s '.')  # -s collects modified objects back into an array in deployments_with_statuses
+
+            # Filter deployments by status if specified and not searching by ID
+            if [[ -n "$status" && -z "$id" ]]; then
+                deployments=$(echo "$deployments_with_statuses" | jq "[.[] | select(.state == \"$status\")]")
+            else
+                deployments="$deployments_with_statuses"
+            fi
+
+            echo "******************************************************"
+            echo "Deployments with statuses:"
+            echo -e "$deployments_with_statuses\n"
+            echo "*******"
+            echo "Filtered deployments:"
+            echo -e "$deployments\n"
+            echo "*******"
+            echo "Selected deployment:"
+            echo "$deployment"
+            echo "******************************************************"
+
+            deployment=$(echo "$deployments" | jq '.[0]')
+            id=$(echo "$deployment" | jq -r '.id')
+            url=$(echo "$deployment" | jq -r '.url')
+            
+            echo "Deployment=${deployment}" >> $GITHUB_ENV
+            echo "Deployment_URL=${url}" >> $GITHUB_ENV
+            echo "Deployment_ID=${id}" >> $GITHUB_ENV
+            echo "Deployments=${deployments}" >> $GITHUB_ENV
