@@ -5,12 +5,16 @@ name: Workflow Sandbox
 on:
   workflow_dispatch:
 
+    
+env:
+  GH_TOKEN: ${{ secrets.PAT }}
+
 jobs:
-  do-some-nothing:
+  do-something:
     runs-on: ubuntu-latest
     steps: # a workflow must have a step, if false makes it not actually run
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Create Deployment
         id: create
         uses: ./.github/actions/Create-Deployment
