@@ -48,7 +48,7 @@ runs:
             if [ -n "$id" ]; then
                 url="$url/$id"
             else
-              queryArray = []
+              queryArray=()
               if [ -n "$ref" ]; then
                   queryArray+=("ref=$ref")
               fi
