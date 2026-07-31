@@ -79,14 +79,18 @@ runs:
 
                 # Add the statuses and state to the deployment object
                 echo "$obj" | jq ".statuses = $statuses | .state = \"$state\""
-            done | jq -s '.')  # -s collects modified objects back into an array in deployments_with_statuses
+            done | jq -sc '.')  # -s collects modified objects back into an array in deployments_with_statuses
 
             # Filter deployments by status if specified and not searching by ID
             if [[ -n "${{ inputs.status }}" && -z "${{ inputs.id }}" ]]; then
-                deployments=$(echo "$deployments_with_statuses" | jq "[.[] | select(.state == \"${{ inputs.status }}\")]")
+                deployments=$(echo "$deployments_with_statuses" | jq -c "[.[] | select(.state == \"${{ inputs.status }}\")]")
             else
                 deployments="$deployments_with_statuses"
             fi
+
+            deployment=$(echo "$deployments" | jq '.[0]')
+            id=$(echo "$deployment" | jq -r '.id')
+            url=$(echo "$deployment" | jq -r '.url')
 
             echo "******************************************************"
             echo "Deployments with statuses:"
@@ -98,10 +102,6 @@ runs:
             echo "Selected deployment:"
             echo "$deployment"
             echo "******************************************************"
-
-            deployment=$(echo "$deployments" | jq '.[0]')
-            id=$(echo "$deployment" | jq -r '.id')
-            url=$(echo "$deployment" | jq -r '.url')
             
             echo "Deployment=${deployment}" >> $GITHUB_OUTPUT
             echo "Deployment_URL=${url}" >> $GITHUB_OUTPUT
