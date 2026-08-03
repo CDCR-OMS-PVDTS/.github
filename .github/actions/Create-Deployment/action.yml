@@ -31,7 +31,7 @@ inputs:
     default: ''
   initial_state:
     description: 'The initial state of the deployment'
-    type: option
+    type: choice
     options:
       - error
       - failure
@@ -56,7 +56,7 @@ outputs:
     value: ${{ steps.add-deployment.outputs.Deployment }}
   Deployment_Status:
     description: 'The status of the created deployment'
-    value: ${{ steps.add-deployment.outputs.Deployment_Status }}
+    value: ${{ steps.add-status.outputs.Status }}
 runs:
   using: "composite"
   steps:
@@ -68,39 +68,34 @@ runs:
         max_attempts: 3
         shell: bash
         command: |
-            # Print the version string
             jq --version
-            
+
+            payload=$(jq -n \
+              --arg workflow "${{ inputs.workflow }}" \
+              --arg workflow_ref "${{ github.ref }}" \
+              --arg workflow_details "${{ inputs.workflow_details }}" \
+              --arg workflow_url "${{ inputs.workflow_url }}" \
+              --arg initial_state "${{ inputs.initial_state }}" \
+              '{workflow: $workflow, workflow_ref: $workflow_ref, workflow_details: $workflow_details, workflow_url: $workflow_url, initial_state: $initial_state}')
+
+            if [[ "${{ inputs.environment }}" == "production" || "${{ inputs.environment }}" == "prod" ]]; then
+              production_env=true
+            else
+              production_env=false
+            fi
+
             deployment=$(gh api "repos/${{ inputs.repo }}/deployments" \
             -H "Accept: application/vnd.github+json" \
             -f "ref=${{ inputs.ref }}" \
-            -f 'payload={ 
-              "workflow": "${{ inputs.workflow }}",
-              "workflow_ref": "${{ github.ref }}", 
-              "workflow_details": "${{ inputs.workflow_details }}",
-              "workflow_url": "${{ inputs.workflow_url }}",
-              "initial_state": "${{ inputs.initial_state }}"
-            }' \
+            -f "payload=$payload" \
             -f "environment=${{ inputs.environment }}" \
             -f "description=${{ inputs.description }}" \
             -f "task=${{ inputs.task }}" \
             -F "auto_merge=false" \
             -f "required_contexts[]" \
-            -F "production_environment=true" \
+            -F "production_environment=$production_env" \
             | jq -c '.' \
             )
-            # echo "Deployment- (original -c):"
-            # echo "$deployment"
-            # echo -e "Deployment1:\n$(echo "$deployment" | jq '.')"
-            # echo "Deployment2 (-c):"
-            # echo "$deployment" | jq -c '.'
-            # echo "Deployment3 (-r):"
-            # echo "$deployment" | jq -r '.'
-            # echo "Deployment4 (--compact-output):"
-            # echo "$deployment" | jq --compact-output '.'
-
-
-
 
             id=$(echo "$deployment" | jq -r '.id')
             url=$(echo "$deployment" | jq -r '.url')
@@ -117,6 +112,7 @@ runs:
             echo "Deployment_STATUSES_URL=${statuses_url}" >> $GITHUB_OUTPUT
             echo "Deployment_ID=${id}" >> $GITHUB_OUTPUT
     - name: Add Status
+      id: add-status
       if: ${{ success() && inputs.initial_state != '' }}
       uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Deployment-Status@29474-DeploymentActions
       with:

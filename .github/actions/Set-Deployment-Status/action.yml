@@ -9,7 +9,7 @@ inputs:
     required: true
   state:
     description: 'The state to add to the deployment'
-    type: option
+    type: choice
     # for an explanation of these states, see DEPLOYMENT_STATUSES.md in this repo
     options:
       - error
@@ -27,7 +27,7 @@ inputs:
 outputs:
   Status:
     description: 'The status of the created deployment'
-    value: ${{ env.Deployment_Status }}
+    value: ${{ steps.add-status.outputs.Status }}
 runs:
   using: "composite"
   steps:
@@ -56,4 +56,4 @@ runs:
           echo "status:"
           echo "$status" | jq '.'
           
-          echo "Status=${status}" >> $GITHUB_ENV
+          echo "Status=${status}" >> $GITHUB_OUTPUT
