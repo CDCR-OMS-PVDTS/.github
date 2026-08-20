@@ -1,0 +1,99 @@
+name: 'Get Deployment'
+description: 'Gets a Deployment in GitHub.'
+inputs:
+  repo:
+    description: 'format: {owner}/{name}'
+    required: true
+  id:
+    description: 'The ID of the deployment to retrieve'
+    required: false
+    default: ''
+  ref:
+    description: 'The git reference for the deployment (tag, branch, commit SHA)'
+    required: false
+    default: ''
+  environment:
+    description: 'The environment for the deployment (e.g., production, staging)'
+    required: false
+    default: ''
+  status:
+    description: 'The status of the deployment (error, failure, inactive, in_progress, queued, pending, success)'
+    required: false
+    default: ''
+outputs:
+  Deployment_ID:
+    description: 'The ID of the selected deployment'
+    value: ${{ steps.get-deployment.outputs.Deployment_ID }}
+  Deployment_URL:
+    description: 'The URL of the selected deployment'
+    value: ${{ steps.get-deployment.outputs.Deployment_URL }}
+  Deployment:
+    description: 'The full deployment object of the selected deployment, augmented with its statuses'
+    value: ${{ steps.get-deployment.outputs.Deployment }}
+  Deployments:
+    description: 'The full list of deployments retrieved'
+    value: ${{ steps.get-deployment.outputs.Deployments }}
+runs:
+  using: "composite"
+  steps:
+    - name: Get Deployment
+      id: get-deployment
+      uses: nick-fields/retry@v4
+      with:
+        timeout_minutes: 10
+        max_attempts: 3
+        shell: bash
+        command: |
+            url="repos/${{ inputs.repo }}/deployments"
+            if [ -n "${{ inputs.id }}" ]; then
+                url="$url/${{ inputs.id }}"
+            else
+              queryArray=()
+              if [ -n "${{ inputs.ref }}" ]; then
+                  queryArray+=("ref=${{ inputs.ref }}")
+              fi
+              if [ -n "${{ inputs.environment }}" ]; then
+                  queryArray+=("environment=${{ inputs.environment }}")
+              fi
+              queryString=$(IFS="&"; echo "${queryArray[*]}")
+                url="$url?${queryString}"
+            fi
+
+            echo "URL: $url"
+
+            # get the page of 30 deployments (default page size for GitHub API)
+            # if searching by ID then ignore the other parameters except repo and
+            # wrap it in an array to maintain consistent structure
+            deployments_raw=$(gh api "$url" \
+            | jq 'if type == "object" then [.] else . end' \
+            )
+
+            # Iterate through each object in the array
+            # -c ensures each object is compact (one line) for safe iteration
+            deployments_with_statuses=$(echo "$deployments_raw" | jq -c '.[]' | while IFS= read -r obj; do
+                # Extract fields from each object
+                statuses_url=$(jq -r '.statuses_url' <<< "$obj")
+                statuses=$(gh api "$statuses_url" | jq '.')
+                state=$(jq -r '.[0].state' <<< "$statuses")
+
+                # Add the statuses and state to the deployment object
+                echo "$obj" | jq ".statuses = $statuses | .state = \"$state\""
+            done | jq -sc '.')  # -s collects modified objects back into an array in deployments_with_statuses
+
+            # Filter deployments by status if specified and not searching by ID
+            if [[ -n "${{ inputs.status }}" && -z "${{ inputs.id }}" ]]; then
+                deployments=$(echo "$deployments_with_statuses" | jq -c "[.[] | select(.state == \"${{ inputs.status }}\")]")
+            else
+                deployments="$deployments_with_statuses"
+            fi
+
+            deployment=$(echo "$deployments" | jq -c '.[0]')
+            id=$(echo "$deployment" | jq -r '.id')
+            url=$(echo "$deployment" | jq -r '.url')
+
+            echo "$deployment" | jq '.'
+            
+            echo "Deployment=${deployment}" >> $GITHUB_OUTPUT
+            echo "Deployment_URL=${url}" >> $GITHUB_OUTPUT
+            echo "Deployment_ID=${id}" >> $GITHUB_OUTPUT
+            echo "Deployments=${deployments}" >> $GITHUB_OUTPUT

@@ -1,0 +1,122 @@
+name: 'Create Deployment'
+description: 'Creates a Deployment in GitHub.'
+inputs:
+  repo:
+    description: 'format: {owner}/{name}'
+    required: true
+  ref:
+    description: 'The git reference for the deployment (tag, branch, commit SHA)'
+    required: true
+  task:
+    description: 'The task for the deployment (e.g., deploy, deploy:migrations, build, test)'
+    required: false
+    default: 'deploy'
+  environment:
+    description: 'The environment for the deployment (e.g., production, staging)'
+    required: true
+  description:
+    description: 'A brief description of the deployment'
+    required: false
+    default: ''
+  workflow:
+    description: 'The name of the workflow that triggered the deployment'
+    required: true
+  workflow_details:
+    description: 'Additional details about the workflow that triggered the deployment'
+    required: false
+    default: ''
+  workflow_url:
+    description: 'The URL of the workflow that triggered the deployment'
+    required: false
+    default: ''
+  initial_state:
+    description: 'The initial state of the deployment'
+    type: choice
+    options:
+      - error
+      - failure
+      - inactive
+      - in_progress
+      - queued
+      - pending
+      - success
+    required: true
+outputs:
+  Deployment_ID:
+    description: 'The ID of the created deployment'
+    value: ${{ steps.add-deployment.outputs.Deployment_ID }}
+  Deployment_URL:
+    description: 'The URL of the created deployment'
+    value: ${{ steps.add-deployment.outputs.Deployment_URL }}
+  Deployment_STATUSES_URL:
+    description: 'The statuses URL of the created deployment'
+    value: ${{ steps.add-deployment.outputs.Deployment_STATUSES_URL }}
+  Deployment:
+    description: 'The full deployment object of the created deployment'
+    value: ${{ steps.add-deployment.outputs.Deployment }}
+  Deployment_Status:
+    description: 'The status of the created deployment'
+    value: ${{ steps.add-status.outputs.Status }}
+runs:
+  using: "composite"
+  steps:
+    - name: Add Deployment
+      id: add-deployment
+      uses: nick-fields/retry@v4
+      with:
+        timeout_minutes: 10
+        max_attempts: 3
+        shell: bash
+        command: |
+            jq --version
+
+            payload=$(jq -n \
+              --arg workflow "${{ inputs.workflow }}" \
+              --arg workflow_ref "${{ github.ref }}" \
+              --arg workflow_details "${{ inputs.workflow_details }}" \
+              --arg workflow_url "${{ inputs.workflow_url }}" \
+              --arg initial_state "${{ inputs.initial_state }}" \
+              '{workflow: $workflow, workflow_ref: $workflow_ref, workflow_details: $workflow_details, workflow_url: $workflow_url, initial_state: $initial_state}')
+
+            if [[ "${{ inputs.environment }}" == "production" || "${{ inputs.environment }}" == "prod" ]]; then
+              production_env=true
+            else
+              production_env=false
+            fi
+
+            deployment=$(gh api "repos/${{ inputs.repo }}/deployments" \
+            -H "Accept: application/vnd.github+json" \
+            -f "ref=${{ inputs.ref }}" \
+            -f "payload=$payload" \
+            -f "environment=${{ inputs.environment }}" \
+            -f "description=${{ inputs.description }}" \
+            -f "task=${{ inputs.task }}" \
+            -F "auto_merge=false" \
+            -f "required_contexts[]" \
+            -F "production_environment=$production_env" \
+            | jq -c '.' \
+            )
+
+            id=$(echo "$deployment" | jq -r '.id')
+            url=$(echo "$deployment" | jq -r '.url')
+            statuses_url=$(echo "$deployment" | jq -r '.statuses_url')
+            
+            echo -e "Deployment:\n$(echo "$deployment" | jq '.')"
+            echo -e "Deployment (compact):\n${deployment}"
+
+            echo "id: ${id}"
+            echo "url: ${url}"
+            echo "statuses_url: ${statuses_url}"
+            echo "Deployment=${deployment}" >> $GITHUB_OUTPUT
+            echo "Deployment_URL=${url}" >> $GITHUB_OUTPUT
+            echo "Deployment_STATUSES_URL=${statuses_url}" >> $GITHUB_OUTPUT
+            echo "Deployment_ID=${id}" >> $GITHUB_OUTPUT
+    - name: Add Status
+      id: add-status
+      if: ${{ success() && inputs.initial_state != '' }}
+      uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Deployment-Status@29474-DeploymentActions
+      with:
+        repo: ${{ inputs.repo }}
+        deployment_id: ${{ steps.add-deployment.outputs.Deployment_ID }}
+        state: ${{ inputs.initial_state }}
+        description: "Initial deployment status"
