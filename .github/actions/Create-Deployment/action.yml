@@ -114,7 +114,7 @@ runs:
     - name: Add Status
       id: add-status
       if: ${{ success() && inputs.initial_state != '' }}
-      uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Deployment-Status@29474-DeploymentActions
+      uses: CDCR-OMS-PVDTS/.github/.github/actions/Set-Deployment-Status@SetDeploymentStatus.v.1.0
       with:
         repo: ${{ inputs.repo }}
         deployment_id: ${{ steps.add-deployment.outputs.Deployment_ID }}
