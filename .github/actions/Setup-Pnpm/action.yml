@@ -1,0 +1,106 @@
+name: 'Setup pnpm'
+description: 'Resolves the repository Node and pnpm versions, installs Node, and installs pnpm.'
+runs:
+  using: 'composite'
+  steps:
+    # Node version, resolved in precedence order. This repo currently answers
+    # at step 2 (.npmrc -> 24.15.0), but pnpm has been migrating settings from
+    # .npmrc into pnpm-workspace.yaml (kebab-case -> camelCase), so check the
+    # newer location first. The chosen source is echoed: if this ever picks a
+    # surprising version, the log says which file to go look at.
+    #
+    # pnpm comes from packageManager ("pnpm@11.1.1") - the exact pin.
+    # engines.pnpm is only a floor (">=11.1.1") and identifies no single
+    # version. Reading both from the repo means this workflow cannot drift
+    # from what the repo declares; that drift is what produced
+    # ERR_PNPM_UNSUPPORTED_ENGINE (the runner's baked-in pnpm was 8.15.9).
+    - name: Resolve Node + pnpm versions
+      id: vers
+      shell: bash
+      run: |
+        set -u
+        node_ver=""; src=""
+
+        # 1. pnpm-workspace.yaml - where pnpm 10+ keeps settings.
+        if [ -z "$node_ver" ] && [ -f pnpm-workspace.yaml ]; then
+          v=$(sed -nE 's/^[[:space:]]*useNodeVersion:[[:space:]]*"?([0-9][^"[:space:]]*)"?.*/\1/p' pnpm-workspace.yaml | head -1)
+          if [ -n "$v" ]; then node_ver="$v"; src="pnpm-workspace.yaml (useNodeVersion)"; fi
+        fi
+
+        # 2. .npmrc - where pnpm 9 and earlier kept it.
+        if [ -z "$node_ver" ] && [ -f .npmrc ]; then
+          v=$(sed -nE 's/^[[:space:]]*use-node-version[[:space:]]*=[[:space:]]*(.+)$/\1/p' .npmrc | tr -d '"' | tr -d '\r' | head -1)
+          if [ -n "$v" ]; then node_ver="$v"; src=".npmrc (use-node-version)"; fi
+        fi
+
+        # 3. The generic files, in case this repo ever grows one.
+        for f in .nvmrc .node-version; do
+          if [ -z "$node_ver" ] && [ -f "$f" ]; then
+            v=$(tr -d 'v \r' < "$f" | head -1)
+            if [ -n "$v" ]; then node_ver="$v"; src="$f"; fi
+          fi
+        done
+
+        # 4. Last resort: engines.node is a RANGE (">=24.0.0"), so take the
+        #    MAJOR only and let setup-node pick the newest release in that
+        #    line. Pinning the literal 24.0.0 would satisfy the floor while
+        #    installing the oldest, least-patched 24 available.
+        if [ -z "$node_ver" ]; then
+          v=$(jq -r '.engines.node // empty' package.json | sed -E 's/[^0-9]*([0-9]+).*/\1/')
+          if [ -n "$v" ]; then node_ver="$v"; src="package.json engines.node (major only)"; fi
+        fi
+
+        if [ -z "$node_ver" ]; then
+          echo "::error title=No Node version declared::Checked pnpm-workspace.yaml, .npmrc, .nvmrc, .node-version and package.json engines.node."
+          exit 1
+        fi
+
+        echo "Node $node_ver - from $src"
+        echo "node=$node_ver" >> "$GITHUB_OUTPUT"
+        echo "pnpm=$(jq -r '.packageManager' package.json | sed 's/^pnpm@//')" >> "$GITHUB_OUTPUT"
+
+    # package-manager-cache is disabled deliberately. setup-node v5 added
+    # AUTOMATIC caching whenever package.json has a packageManager field
+    # (this repo has "pnpm@11.1.1"), and pnpm caching runs `pnpm store path`
+    # - which would execute before the pnpm install step below. v6 narrowed
+    # auto-caching to npm only, so v7 would not engage it here anyway; this
+    # makes that independent of the action's internals.
+    - uses: actions/setup-node@v7
+      with:
+        node-version: ${{ steps.vers.outputs.node }}
+        package-manager-cache: false
+
+    # Installed into a JOB-LOCAL prefix, not the runner user's shared global
+    # dir. `npm install -g` is not concurrency-safe: it renames the existing
+    # package dir aside to a staging name derived from the target PATH
+    # (identical on every machine), unpacks, then deletes it. Two jobs on one
+    # runner race; the loser leaves a partial `.pnpm-XXXXXXXX` and from then
+    # on EVERY install on that runner fails permanently with ENOTEMPTY.
+    # $RUNNER_TEMP dies with the job, so there is no shared state to corrupt.
+    #
+    # Retried because this reaches the registry through the CDCR proxy, which
+    # intermittently drops connections - one un-retried network call is enough
+    # to fail a build for a reason that has nothing to do with the code.
+    - name: Install pnpm
+      shell: bash
+      run: |
+        set -u
+        PNPM_PREFIX="$RUNNER_TEMP/pnpm"
+        MAX_ATTEMPTS=5
+        for i in $(seq 1 $MAX_ATTEMPTS); do
+          echo "::group::npm install pnpm attempt $i / $MAX_ATTEMPTS"
+          if npm install -g --prefix "$PNPM_PREFIX" "pnpm@${{ steps.vers.outputs.pnpm }}"; then
+            echo "::endgroup::"
+            echo "pnpm installed on attempt $i"
+            echo "$PNPM_PREFIX/bin" >> "$GITHUB_PATH"
+            exit 0
+          fi
+          echo "::endgroup::"
+          echo "attempt $i failed"
+          # `if`, not `[ ] && sleep`: GitHub runs this under `bash -e`, where a
+          # false AND-list at the end of the loop body aborts the step - and we
+          # would lose the ::error annotation below.
+          if [ "$i" -lt "$MAX_ATTEMPTS" ]; then sleep 5; fi
+        done
+        echo "::error title=pnpm install failed::Could not install pnpm after $MAX_ATTEMPTS attempts - the registry proxy may be down."
+        exit 1
