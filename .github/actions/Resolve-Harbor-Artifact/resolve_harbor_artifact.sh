@@ -137,16 +137,15 @@ while true; do
     break
   fi
 
-  page_artifacts=$(cat "${response_file}")
-  rm -f "${response_file}"
-
-  page_count=$(jq 'length' <<< "${page_artifacts}")
+  page_count=$(jq 'length' "${response_file}")
   if [[ "${page_count}" -eq 0 ]]; then
+    rm -f "${response_file}"
     break
   fi
   echo "page_count: ${page_count}"
 
-  all_artifacts=$(jq -c --argjson newPage "${page_artifacts}" '. + $newPage' <<< "${all_artifacts}")
+  all_artifacts=$(jq -c --slurpfile newPage "${response_file}" '. + $newPage[0]' <<< "${all_artifacts}")
+  rm -f "${response_file}"
 
   if [[ "${page_count}" -lt "${page_size}" ]]; then
     break
