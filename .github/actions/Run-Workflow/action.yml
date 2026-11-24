@@ -1,5 +1,5 @@
 name: 'Run Workflow'
-description: 'Sends a workfow-dispatch event to a github workflow.'
+description: 'Dispatches a workflow and optionally waits with bounded, rate-aware polling.'
 inputs:
   repo:
     description: 'format: {owner}/{name}'
@@ -11,211 +11,109 @@ inputs:
     description: 'the ref to invoke the workflow at'
     required: true
   goal:
-    description: 'A goal to wait for before exiting. Options are start, complete, and success. The drfault is start.'
-    required: false
-    defailt: 'start'
+    description: 'start (dispatch only), complete (any conclusion), or success (fail on child failure)'
+    default: 'start'
   access_token:
-    description: 'GitHub access token to use to access repo'
-    required: true
+    description: 'Explicit token; mutually exclusive with App credentials. Never falls back to GH_TOKEN.'
+    required: false
+  app_id:
+    description: 'GitHub App ID; the installation must cover the target repo with Actions: write'
+    required: false
+  app_private_key:
+    description: 'GitHub App private key, supplied from a secret'
+    required: false
   wait_name_filter:
-    description: 'The run must have this text in its name, blank to not filter'
+    description: 'The run must have this text in its name; use a unique caller identifier'
     required: false
+  poll_interval_seconds:
+    description: 'Polling interval, at least 30 seconds'
+    default: '60'
+  timeout_minutes:
+    description: 'Total dispatch and wait deadline; 1-55 minutes to stay within App token lifetime'
+    default: '45'
   field1:
-    description: 'a field to send to the workflow in the form name=value'
-    required: false
+    description: 'Workflow input in the form name=value'
   field2:
-    description: 'a field to send to the workflow in the form name=value'
-    required: false
+    description: 'Workflow input in the form name=value'
   field3:
-    description: 'a field to send to the workflow in the form name=value'
-    required: false
+    description: 'Workflow input in the form name=value'
   field4:
-    description: 'a field to send to the workflow in the form name=value'
-    required: false
+    description: 'Workflow input in the form name=value'
   field5:
-    description: 'a field to send to the workflow in the form name=value'
-    required: false
+    description: 'Workflow input in the form name=value'
+  field6:
+    description: 'Workflow input in the form name=value'
   field16:
-    description: 'a field to send to the workflow in the form name=value'
-    required: false
+    description: 'Legacy alias for field6'
   field7:
-    description: 'a field to send to the workflow in the form name=value'
-    required: false
+    description: 'Workflow input in the form name=value'
   field8:
-    description: 'a field to send to the workflow in the form name=value'
-    required: false
+    description: 'Workflow input in the form name=value'
   field9:
-    description: 'a field to send to the workflow in the form name=value'
-    required: false
+    description: 'Workflow input in the form name=value'
   field10:
-    description: 'a field to send to the workflow in the form name=value'
-    required: false
+    description: 'Workflow input in the form name=value'
   debug:
-    description: 'display detailed results when value is "true"'
-    required: false
+    description: 'Log rate-limit response headers when true; never logs tokens or workflow inputs'
+outputs:
+  run_id:
+    description: 'Matched run ID (empty for goal=start)'
+    value: ${{ steps.dispatch.outputs.run_id }}
+  run_url:
+    description: 'Matched run URL (empty for goal=start)'
+    value: ${{ steps.dispatch.outputs.run_url }}
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
-    - name: Set Values
-      shell: bash
-      id: set_values
-      run: |
-        echo name: "${{ inputs.repo }}"
-        echo workflow: "${{ inputs.workflow }}"
-        echo ref: "${{ inputs.ref }}"
-        echo goal: "${{ inputs.goal }}"
-        echo wait name filter: "${{ inputs.wait_name_filter }}"
-        if [ -n "${{ inputs.debug }}" ] ; then
-          echo debug: "${{ inputs.debug }}"
-        fi
-        echo ""
-        fields="${{ inputs.field1 && format('-f {0} ', inputs.field1) || '' }}"
-        fields+="${{ inputs.field2 && format('-f {0} ', inputs.field2) || '' }}"
-        fields+="${{ inputs.field3 && format('-f {0} ', inputs.field3) || '' }}"
-        fields+="${{ inputs.field4 && format('-f {0} ', inputs.field4) || '' }}"
-        fields+="${{ inputs.field5 && format('-f {0} ', inputs.field5) || '' }}"
-        fields+="${{ inputs.field6 && format('-f {0} ', inputs.field6) || '' }}"
-        fields+="${{ inputs.field7 && format('-f {0} ', inputs.field7) || '' }}"
-        fields+="${{ inputs.field8 && format('-f {0} ', inputs.field8) || '' }}"
-        fields+="${{ inputs.field9 && format('-f {0} ', inputs.field9) || '' }}"
-        fields+="${{ inputs.field10 && format('-f {0} ', inputs.field10) || '' }}"
-        echo "fields=${fields}"
-        echo "fields=${fields}" >> "$GITHUB_OUTPUT"
-        echo ""
-        # timestamp just before the workflow is started
-        echo "startTime=$(date -u +%FT%TZ)"
-        echo "startTime=$(date -u +%FT%TZ)" >> "$GITHUB_OUTPUT"
-    - name: Run Workflow
-      uses: nick-fields/retry@v4
+    - uses: actions/setup-node@v6
       with:
-        timeout_minutes: 10
-        max_attempts: 3
-        shell: bash
-        command: |
-          echo gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
-          gh workflow run "${{ inputs.workflow }}" --repo "${{ inputs.repo }}" --ref "${{ inputs.ref }}" ${{ steps.set_values.outputs.fields }}
-          if [[ "$?" != 0 ]]; then
-            printf "${RED}%s\n${NC}" "*** ERROR: Failed to run workflow"
-            exit 1
-          fi
-    - name: Await Workflow
+        node-version: '22'
+    - name: Validate inputs
+      id: validate
       shell: bash
-      continue-on-error: true
-      if: ${{ inputs.goal == 'complete' || inputs.goal == 'success' }}
-      run: |
-        fieldlist="conclusion,createdAt,databaseId,event,headBranch,headSha,name,status,updatedAt,url,workflowDatabaseId"
-        isFinished=0
-        until [ $isFinished -gt 0 ] ; do
-          echo "$(date -u +%T) UTC: Waiting 30 seconds to check workflow status ..."
-          sleep 30s
-          runData="$(gh run list --repo "${{ inputs.repo }}" --json "${fieldlist}" --workflow ${{ inputs.workflow }} --limit 1 || echo "gh failed")"
-          if [ "${{ inputs.debug }}" = "true" ] ; then
-            echo "goal: ${{ inputs.goal }}"
-            echo "ref: ${{ inputs.ref }}"
-            if [ "$runData" = "gh failed" ] ; then
-              echo "runData: $runData"
-            else
-              echo "runData:"
-              echo "$runData" | jq .
-              echo ""
-              echo ""
-              echo "runData.fileterOn(startTime >= ${{ steps.set_values.outputs.startTime }}).length:"
-              echo "$runData" | jq \
-              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-              --arg ref "${{ inputs.ref }}" \
-              --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.createdAt >= $startTime)?] | length'
-              echo ""
-              echo "runData.fileterOn(name contains(${{ inputs.wait_name_filter }})).length:"
-              echo "$runData" | jq \
-              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-              --arg ref "${{ inputs.ref }}" \
-              --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select((.name | contains($name)))?] | length'
-              echo ""
-              echo "runData.fileterOn(conclusion = success).length:"
-              echo "$runData" | jq \
-              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-              --arg ref "${{ inputs.ref }}" \
-              --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.conclusion == "success")?] | length'
-              echo ""
-              echo "runData.fileterOn(branch = ${{ inputs.ref }}).length:"
-              echo "$runData" | jq \
-              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-              --arg ref "${{ inputs.ref }}" \
-              --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.headBranch == $ref)?] | length'
-              echo ""
-              echo "runData.fileterOn(status = completed).length:"
-              echo "$runData" | jq \
-              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-              --arg ref "${{ inputs.ref }}" \
-              --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.status == "completed")?] | length'
-              echo ""
-              echo ""
-              echo "runData.fileterOn(startTime and (filter) and conclusion and branch).length:"
-              echo "$runData" | jq \
-              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-              --arg ref "${{ inputs.ref }}" \
-              --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .conclusion == "success" and .headBranch == $ref)?] | length'
-              echo ""
-              echo "runData.fileterOn(startTime and (filter) and status and branch).length:"
-              echo "$runData" | jq \
-              --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-              --arg ref "${{ inputs.ref }}" \
-              --arg name "${{ inputs.wait_name_filter }}" \
-              '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .status == "completed" and .headBranch == $ref)?] | length'
-            fi
-          fi
-          
-          if [ "$runData" != "gh failed" ] ; then
-            case "${{ inputs.goal }}" in
-              success) 
-                if [ "${{ inputs.debug }}" = "true" ] ; then
-                  echo "running success check"
-                fi
-                isFinished=$(echo ${runData} | jq  -c \
-                --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-                --arg ref "${{ inputs.ref }}" \
-                --arg name "${{ inputs.wait_name_filter }}" \
-                '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .conclusion == "success" and .headBranch == $ref)?] | length')
-                ;;
-              complete) 
-                if [ "${{ inputs.debug }}" = "true" ] ; then
-                  echo "running complete check"
-                fi
-                isFinished=$(echo ${runData} | jq  -c \
-                --arg startTime "${{ steps.set_values.outputs.startTime }}" \
-                --arg ref "${{ inputs.ref }}" \
-                --arg name "${{ inputs.wait_name_filter }}" \
-                '[.[] | select(.createdAt >= $startTime and (.name | contains($name)) and .status == "completed" and .headBranch == $ref)?] | length')
-                ;;
-            esac
-            run_url=$(echo ${runData} | jq  -c '.[0].url')
-            echo "\n\nurl: $run_url"
-          fi
-
-          if [ "${{ inputs.debug }}" = "true" ] ; then
-            echo "isFinished: $isFinished"
-          fi
-        done
-
-        isSucccessful=$(echo ${runData} | jq  -c \
-        '[.[] | select(.conclusion == "success")?] | length')
-
-        if [ "${{ inputs.debug }}" = "true" ] ; then
-          echo "isSucccessful: $isSucccessful"
-        fi
-
-        url=$(echo ${runData} | jq  -c '.[0].url')
-        echo "Url of run: ${url}"
-
-        if [ $isSucccessful -gt 0 ] ; then
-          echo "Workflow Completed Sucessfully"
-        else
-          echo "*** Workflow Completed With Errors ****"
-          # TODO Add an option to fail this workflow if the child workflow failed
-        fi
+      env:
+        INPUT_REPO: ${{ inputs.repo }}
+        INPUT_WORKFLOW: ${{ inputs.workflow }}
+        INPUT_REF: ${{ inputs.ref }}
+        INPUT_GOAL: ${{ inputs.goal }}
+        INPUT_ACCESS_TOKEN: ${{ inputs.access_token }}
+        INPUT_APP_ID: ${{ inputs.app_id }}
+        INPUT_APP_PRIVATE_KEY: ${{ inputs.app_private_key }}
+        INPUT_POLL_INTERVAL_SECONDS: ${{ inputs.poll_interval_seconds }}
+        INPUT_TIMEOUT_MINUTES: ${{ inputs.timeout_minutes }}
+      run: node "${{ github.action_path }}/run-workflow.cjs" --validate
+    - name: Create target repository installation token
+      id: app-token
+      if: ${{ inputs.app_id != '' }}
+      uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+      with:
+        app-id: ${{ inputs.app_id }}
+        private-key: ${{ inputs.app_private_key }}
+        owner: ${{ steps.validate.outputs.owner }}
+        repositories: ${{ steps.validate.outputs.repository }}
+        permission-actions: write
+    - name: Dispatch and await workflow
+      id: dispatch
+      shell: bash
+      env:
+        INPUT_REPO: ${{ inputs.repo }}
+        INPUT_WORKFLOW: ${{ inputs.workflow }}
+        INPUT_REF: ${{ inputs.ref }}
+        INPUT_GOAL: ${{ inputs.goal }}
+        INPUT_ACCESS_TOKEN: ${{ steps.app-token.outputs.token || inputs.access_token }}
+        INPUT_WAIT_NAME_FILTER: ${{ inputs.wait_name_filter }}
+        INPUT_POLL_INTERVAL_SECONDS: ${{ inputs.poll_interval_seconds }}
+        INPUT_TIMEOUT_MINUTES: ${{ inputs.timeout_minutes }}
+        INPUT_DEBUG: ${{ inputs.debug }}
+        INPUT_FIELD1: ${{ inputs.field1 }}
+        INPUT_FIELD2: ${{ inputs.field2 }}
+        INPUT_FIELD3: ${{ inputs.field3 }}
+        INPUT_FIELD4: ${{ inputs.field4 }}
+        INPUT_FIELD5: ${{ inputs.field5 }}
+        INPUT_FIELD6: ${{ inputs.field6 || inputs.field16 }}
+        INPUT_FIELD7: ${{ inputs.field7 }}
+        INPUT_FIELD8: ${{ inputs.field8 }}
+        INPUT_FIELD9: ${{ inputs.field9 }}
+        INPUT_FIELD10: ${{ inputs.field10 }}
+        GITHUB_API_URL: ${{ github.api_url }}
+      run: node "${{ github.action_path }}/run-workflow.cjs"
