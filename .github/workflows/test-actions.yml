@@ -1,0 +1,22 @@
+name: Test shared actions
+on:
+  pull_request:
+    paths:
+      - '.github/actions/Run-Workflow/**'
+      - '.github/workflows/test-actions.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.github/actions/Run-Workflow/**'
+      - '.github/workflows/test-actions.yml'
+permissions:
+  contents: read
+jobs:
+  run-workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - run: node --test .github/actions/Run-Workflow/run-workflow.test.cjs
